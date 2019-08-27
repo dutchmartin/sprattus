@@ -1,0 +1,12 @@
+[package]
+name = "tokio-postgres-example"
+version = "0.1.0"
+authors = ["Martijn Groeneveldt <Martijn Groeneveldt>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+tokio = "0.1"
+tokio-postgres = "0.4.0-rc.3"
+futures = "0.1.28"

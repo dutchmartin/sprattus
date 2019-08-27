@@ -1,0 +1,11 @@
+version: '3.3'
+services:
+  psql:
+    image: postgres:10
+    environment:
+      POSTGRES_USER: tg
+    volumes:
+      - "./shared/*:/docker-entrypoint-initdb.d/"
+    working_dir: /app
+    ports: ["5432:5432"]
+    networks: [default]
