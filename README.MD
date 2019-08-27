@@ -35,6 +35,7 @@ Since there currently is no rust software library that complies with the feature
 ##### con's
 * Potentially a lot of work since you need build things that are already in Diesel.
 * Implementing this could face the same difficulties that Diesel has in implementing it.
+* Async await support is experimental and requires changes to the crate to work properly. The current branch for that is not ready yet.
 
 ###### notes from implementing examples
 A Client has to be mutable, so it has to be thread safe.
