@@ -1,75 +1,61 @@
-use futures::future::Future;
-use futures::stream::Stream;
-use tokio_postgres::NoTls;
 use std::error::Error;
+use std::io::{ Error as OperationError, ErrorKind};
+use tokio::prelude::*;
+use tokio_postgres::{
+    NoTls,
+    Client,
+    row::Row
+};
+use futures_util::try_future::TryFutureExt;
 
-fn main() {
-    let fut =
-        // Connect to the database
-        tokio_postgres::connect("postgresql://localhost/dellstore2?user=tg", NoTls)
+#[tokio::main]
+async fn main() /*-> Result<(), Box<dyn Error>>*/ {
+//    let (mut client, mut connection) = tokio_postgres::connect("postgresql://localhost/dellstore2?user=tg", NoTls).await?;
+//
+//    connection.map_err(|e| eprintln!("connection error: {}", e));
+//
+//    async move {
+//        get_categories(&mut client);
+//    };
+//
+//    Ok(())
 
-            .map(|(client, connection)| {
-                // The connection object performs the actual communication with the database,
-                // so spawn it off to run on its own.
-                let connection = connection.map_err(|e| eprintln!("connection error: {}", e));
-                tokio::spawn(connection);
-
-                // The client is what you use to make requests.
-                client
-            })
-
-            .and_then(|mut client| {
-                // Now we can prepare a simple statement that just returns its parameter.
-                client.prepare("SELECT categoryname from categories")
-                    .map(|statement| (client, statement))
-            })
-
-            .and_then(|(mut client, statement)| {
-                // And then execute it, returning a Stream of Rows which we collect into a Vec
-                client.query(&statement, &[]).collect()
-            })
-
-            // Now we can check that we got back the same string we sent over.
-            .map(|rows| {
-                for (i, row) in rows.iter().enumerate() {
-                    let value: String = row.get("categoryname");
-                    println!("{}| {}", i+1, value)
-                };
-            })
-
-            // And report any errors that happened.
-            .map_err(|e| {
-                eprintln!("error: {}", e);
-            });
-    // By default, tokio_postgres uses the tokio crate as its runtime.
-    tokio::run(fut);
 }
+//
+//async fn get_categories(client: &mut Client)  {
+//    // Now we can prepare a simple statement that just returns its parameter.
+//    let statement = client.prepare("SELECT categoryname from categories")
+//
+//        .and_then(|statement|
+//            client.query(&statement, &[])
+//        ).collect()
+//        .and_then(|row|
+//            return row.get(0)
+//        ).map_err(|e| eprintln!("connection error: {}", e));
+//
+////            let category: String = row.get(0);
+////            category
+//    ()
+//}
 
-//async fn getCategories() -> Result<Vec<String>, Box<Error>>
-//{
-//    tokio_postgres::connect("postgresql://localhost/dellstore2?user=tg", NoTls)
-//
-//        .map(|(client, connection)| {
-//            // The connection object performs the actual communication with the database,
-//            // so spawn it off to run on its own.
-//            let connection = connection.map_err(|e| eprintln!("connection error: {}", e));
-//            tokio::spawn(connection);
-//
-//            // The client is what you use to make requests.
-//            client
-//        })
-//
-//        .and_then(|mut client| {
+//async fn get_categories(mut client: Client){
 //            // Now we can prepare a simple statement that just returns its parameter.
-//            client.prepare("SELECT categoryname from categories")
+//            client.prepare("SELECT $1::TEXT")
 //                .map(|statement| (client, statement))
-//        })
 //
 //        .and_then(|(mut client, statement)| {
 //            // And then execute it, returning a Stream of Rows which we collect into a Vec
-//            let result = client.query(&statement, &[]).collect().map(|row|{
-//                let category: String = row.get(0);
-//                category
-//            });
+//            client.query(&statement, &[&"hello world"]).collect()
 //        })
+//
+//        // Now we can check that we got back the same string we sent over.
+//        .map(|rows| {
+//            let value: &str = rows[0].get(0);
+//            assert_eq!(value, "hello world");
+//        })
+//
+//        // And report any errors that happened.
+//        .map_err(|e| {
+//            eprintln!("error: {}", e);
+//        });
 //}

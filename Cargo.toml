@@ -1,0 +1,6 @@
+[workspace]
+
+members = [
+    "tokio-postgres-example",
+    "async-example"
+]

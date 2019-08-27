@@ -1,7 +1,13 @@
-# async rust orm for postgres
+# async Rust ORM for Postgres
 ###### The Future .awaits
 
+Tweede Golf wants to have a good async ORM to use in their clients web applications.
+Since there currently is no rust software library that complies with the features described below, we need to implement it in some way.
 
+### Features wanted
+* async with as few locks possible
+* Easy mapping from sql query to struct instance, preferably as a zero cost abstraction.
+* Utility methods for commonly used database query's
 
 ### Options for having a async struct mapped database connection.
 * Modifying [Diesel](diesel.rs) to have async support.
@@ -25,5 +31,10 @@
 ##### pro's
 * Freedom in implementing a solution tailored to Tweede Golf's needs.
 
+
 ##### con's
 * Potentially a lot of work since you need build things that are already in Diesel.
+* Implementing this could face the same difficulties that Diesel has in implementing it.
+
+###### notes from implementing examples
+A Client has to be mutable, so it has to be thread safe.
