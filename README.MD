@@ -24,7 +24,8 @@ Since there currently is no rust software library that complies with the feature
 ##### con's
 * Implementing it correctly is not possible according to the authors [[1]](https://github.com/diesel-rs/diesel/issues/2084),[[2]](https://github.com/diesel-rs/diesel/issues/399#issuecomment-518422793)
 
-    There are solutions, but those are either hacks or suboptimal for providing a usable public api. The best way to implement it is to patch the compiler so a more advanced livetime can be used.
+    There are solutions, but those are either hacks or suboptimal for providing a usable public api. The best way to implement it is to patch the compiler so a more advanced lifetime can be used.
+* The api to implement will have to use as much of the current api to not be a maintenance burden for the current maintainers.
 
 #### Adding features to tokio-postgres
 
