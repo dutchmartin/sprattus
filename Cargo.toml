@@ -2,5 +2,6 @@
 
 members = [
     "tokio-postgres-example",
-    "async-example"
+    "async-example",
+    "sync-diesel-example"
 ]

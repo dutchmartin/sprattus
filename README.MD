@@ -39,4 +39,11 @@ Since there currently is no rust software library that complies with the feature
 * Async await support is experimental and requires changes to the crate to work properly. The current branch for that is not ready yet.
 
 ###### notes from implementing examples
-A Client has to be mutable, so it has to be thread safe.
+tokio-postgres:
+* A Client has to be mutable, so it has to be thread safe.
+* The syntax for async await is only half implemented.
+
+diesel:
+* setup takes time and is hard to get for first timers.
+* Documentation is not up to date.
+* Is still not fully updated to rust 2018.
