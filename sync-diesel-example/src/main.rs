@@ -13,6 +13,7 @@ mod models;
 mod schema;
 
 use crate::schema::*;
+use crate::schema::products::columns::title;
 use crate::models::*;
 
 pub fn establish_connection() -> PgConnection {
@@ -28,9 +29,11 @@ fn main() {
     let conn = establish_connection();
     create_product(&conn);
     let products = get_products(&conn);
+    println!("Inserted new product");
     for product in products {
         dbg!(product);
     }
+    delete_products(&conn);
 }
 
 fn create_product(conn: &PgConnection){
@@ -50,7 +53,12 @@ fn create_product(conn: &PgConnection){
 fn get_products(conn: &PgConnection) -> Vec<Product> {
     products::table
         .select(products::all_columns)
-        .order(products::prod_id.asc())
+        .order(products::prod_id.desc())
+        .limit(5)
         .load(&*conn)
         .expect("Could not get values form db")
+}
+
+fn delete_products(conn: &PgConnection) {
+    diesel::delete(products::table.filter(title.eq("Baby shark"))).execute(&*conn).expect("delete it");
 }
