@@ -15,8 +15,15 @@ Since there currently is no rust software library that complies with the feature
 
 
 ### Motivations for deciding on what to implement
+In order to decide what we want to do, we need to set requirements and lay them next to the proposed solutions.
+Then we need to make a decision is that solution is worth the time being spend in there. 
 
 #### modifying diesel
+
+**task list for doing it**
+* Adding tokio-postgress to diesel. ([Sean Griffin thinks different about this.](https://github.com/diesel-rs/diesel/issues/2084#issuecomment-512983289))
+* Search for a way to give everyone access to a connection pool that can be used in async way. This might involve writing a custom data structure.
+* Add futures as a return type for all database operations.
 
 ##### pro's
 * You get all features Diesel currently provides.
@@ -26,8 +33,13 @@ Since there currently is no rust software library that complies with the feature
 
     There are solutions, but those are either hacks or suboptimal for providing a usable public api. The best way to implement it is to patch the compiler so a more advanced lifetime can be used.
 * The api to implement will have to use as much of the current api to not be a maintenance burden for the current maintainers.
+* Breaking changes [need a good explanation](https://discourse.diesel.rs/t/diesel-2-0-what-goes-here/11).
 
 #### Adding features to tokio-postgres
+
+**task list for doing it**
+* making the package fully async await compliant.
+* figuring out a api that works for everyone.
 
 ##### pro's
 * Freedom in implementing a solution tailored to Tweede Golf's needs.
