@@ -1,7 +1,8 @@
 [workspace]
 
 members = [
-    "tokio-postgres-example",
+    "tokio-postgres-async-await-try",
     "async-example",
-    "sync-diesel-example"
+    "sync-diesel-example",
+    "tokio-postgres-example",
 ]
