@@ -9,5 +9,5 @@ edition = "2018"
 [dependencies]
 diesel = {version = "1.4.2", features = ["postgres", "numeric"]}
 dotenv = "0.14.1"
-num-bigint = "*"
-bigdecimal = "*"
+num-bigint = "0.2.2"
+bigdecimal = "0.0.14"

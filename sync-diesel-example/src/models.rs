@@ -1,6 +1,7 @@
 use bigdecimal::*;
+use crate::schema::*;
 
-#[derive(Queryable, Debug, Associations, I)]
+#[derive(Queryable, Debug, Associations, Insertable)]
 pub struct Product {
     #[column_name="prod_id"]
     id: i32,
