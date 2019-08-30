@@ -54,6 +54,7 @@ Then we need to make a decision is that solution is worth the time being spend i
 tokio-postgres:
 * A Client has to be mutable, so it has to be thread safe.
 * The syntax for async await is only half implemented.
+* There are no implementations for complex types yet like [bigdecimal](https://github.com/sfackler/rust-postgres/issues/307)
 
 diesel:
 * setup takes time and is hard to get for first timers.
