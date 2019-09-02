@@ -20,17 +20,17 @@ fn main() {
 }
 
 fn get_products(client_ref: Arc<Mutex<Client>>) -> Box<dyn Future<Item=Vec<Product>, Error=error::Error> + Send> {
-    //let client = Arc::clone(client_ref).lock().unwrap();
-    let fut = client_ref.lock().unwrap().prepare("SELECT * FROM products ORDER BY prod_id DESC LIMIT $1");
+    let fut = client_ref.lock().unwrap().prepare("SELECT * FROM products ORDER BY prod_id DESC limit 5");
     let ret_val = fut
         .and_then(move |statement|{
             let limit = 5;
-            client_ref.lock().unwrap().query(&statement, &[&limit]).collect()
+            client_ref.lock().unwrap().query(&statement, &[/*&limit*/]).collect()
         })
         .map(move |rows|{
+            let mut n : usize = 0;
             rows.iter().map(move |row|{
                 Product {
-                    id: row.get(0),
+                    id: 1,//row.get(0),
                     category: row.get(1),
                     title: row.get(2),
                     actor: row.get(3),
