@@ -23,8 +23,7 @@ fn get_products(client_ref: Arc<Mutex<Client>>) -> Box<dyn Future<Item=Vec<Produ
     let fut = client_ref.lock().unwrap().prepare("SELECT * FROM products ORDER BY prod_id DESC limit 5");
     let ret_val = fut
         .and_then(move |statement|{
-            let limit = 5;
-            client_ref.lock().unwrap().query(&statement, &[/*&limit*/]).collect()
+            client_ref.lock().unwrap().query(&statement, &[]).collect()
         })
         .map(move |rows|{
             let mut n : usize = 0;
