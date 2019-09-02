@@ -2,11 +2,11 @@ use bigdecimal::*;
 
 #[derive(Debug)]
 pub struct Product {
-    id: i32,
-    category: i32,
-    title: String,
-    actor: String,
-    price: BigDecimal,
-    special: Option<i16>,
-    common_prod_id: i32
+    pub id: i32,
+    pub category: i32,
+    pub title: String,
+    pub actor: String,
+    pub price: BigDecimal,
+    pub special: Option<i16>,
+    pub common_prod_id: i32
 }

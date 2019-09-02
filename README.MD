@@ -60,3 +60,21 @@ diesel:
 * setup takes time and is hard to get for first timers.
 * Documentation is not up to date.
 * Is still not fully updated to rust 2018.
+
+#### API Concept. 
+```rust
+async fn controller_method(DbClient : Client) -> impl Response{
+    DbClient.get()?.prepare("Select x from y")
+        .and_then(move |statement|{
+            dbclient.get()?.query(statement, /*args*/ &[])
+        })
+        .and_then(move |rows|{
+            rows.iter().map(move |row|{
+                X::from_sql(row)
+            }).collect()  
+        })
+        .and_then(|data|{
+            Template.render("page.html", data)
+        })  
+}
+```
