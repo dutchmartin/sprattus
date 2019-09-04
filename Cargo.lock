@@ -842,6 +842,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "profugus"
+version = "0.1.0"
+dependencies = [
+ "futures 0.1.28 (registry+https://github.com/rust-lang/crates.io-index)",
+ "parking_lot 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tokio 0.1.22 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tokio-postgres 0.4.0-rc.3 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "profugus-example"
+version = "0.1.0"
+dependencies = [
+ "bigdecimal 0.0.14 (registry+https://github.com/rust-lang/crates.io-index)",
+ "futures 0.1.28 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tokio 0.1.22 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tokio-postgres 0.4.0-rc.3 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "quote"
 version = "0.6.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"

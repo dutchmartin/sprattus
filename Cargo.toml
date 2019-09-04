@@ -5,5 +5,7 @@ members = [
     "async-example",
     "sync-diesel-example",
     "tokio-postgres-example",
+    "profugus",
+    "profugus-example",
 ]
 
