@@ -6,3 +6,4 @@ members = [
     "sync-diesel-example",
     "tokio-postgres-example",
 ]
+

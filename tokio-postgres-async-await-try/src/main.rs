@@ -1,59 +1,63 @@
 use std::error::Error;
-use std::io::{Error as OperationError, ErrorKind};
+use std::sync::{Arc, Mutex};
 use tokio::prelude::*;
-use tokio_postgres::{
-    NoTls,
-    Client,
-    row::Row,
-};
+use tokio_postgres::{NoTls, Client, row::Row, Statement};
 use futures_util::try_future::TryFutureExt;
+use bigdecimal::*;
+
+mod models;
+
+use crate::models::*;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    let (mut client, mut connection) = tokio_postgres::connect("postgresql://localhost/dellstore2?user=tg", NoTls).await?;
-
-    connection.map_err(|e| eprintln!("connection error: {}", e));
-
-    async move {
-        get_categories(&mut client);
-    };
+    let (mut client, connection) = tokio_postgres::connect("postgresql://localhost/dellstore2?user=tg", NoTls).await?;
+    let connection = connection.map_err(|e| eprintln!("connection error: {}", e)).await;
+    let client_ref = Arc::new(Mutex::new(client));
+    let statement = prepare_statement(client_ref.clone(), "SELECT * FROM products ORDER BY prod_id DESC limit 5").await;
+    let result = get_products(client_ref.clone(), statement.unwrap()).await;
 
     Ok(())
 }
 
-async fn get_categories(client: &mut Client) {
-    // Now we can prepare a simple statement that just returns its parameter.
-    let statement = client.prepare("SELECT categoryname from categories")
-
-        .and_then(|statement|
-            client.query(&statement, &[])
-        ).collect()
-        .and_then(|row|
-            return row.get(0)
-        ).map_err(|e| eprintln!("connection error: {}", e));
-
-    let category: String = row.get(0);
-    category
-        ()
+async fn prepare_statement(client_ref: Arc<Mutex<Client>>, statement: &str) -> Box<Result<Statement, tokio_postgres::Error>> {
+    match client_ref
+        .lock()
+        .unwrap()
+        .prepare("SELECT * FROM products ORDER BY prod_id DESC limit 5").await {
+        Ok(Statement) => {
+            return Box::new(Ok(Statement));
+        }
+        Err(e) => {
+            return Box::new(Err(e));
+        }
+    }
 }
 
-async fn get_categories_2(client: &mut Client) {
-    // Now we can prepare a simple statement that just returns its parameter.
-    client.prepare("SELECT $1::TEXT")
-        .map(|statement| (client, statement))
-
-        .and_then(|(mut client, statement)| {
-            // And then execute it, returning a Stream of Rows which we collect into a Vec
-            client.query(&statement, &[&"hello world"]).collect()
-        })
-
-        // Now we can check that we got back the same string we sent over.
-        .map(|rows| {
-            let value: &str = rows[0].get(0);
-        })
-
-        // And report any errors that happened.
-        .map_err(|e| {
-            eprintln!("error: {}", e);
-        });
+async fn get_products(client_ref: Arc<Mutex<Client>>, statement: Statement) -> Box<Vec<Option<Product>>> {
+    client_ref
+        .lock()
+        .unwrap()
+        .query(&statement, &[]) // returns a stream<Item = Result<Row, tokio_postgres::Error>>
+        .collect()
+        .map(|row_result: Result<Row, tokio_postgres::Error> /*type interference breaks here*/| {
+            // Could be https://github.com/rust-lang-nursery/futures-rs/issues/1833
+            match row_result {
+                Ok(row) => {
+                    Some(Product {
+                        id: row.get(0),
+                        category: row.get(1),
+                        title: row.get(2),
+                        actor: row.get(3),
+                        price: BigDecimal::from(0),
+                        special: row.get(5),
+                        common_prod_id: row.get(6),
+                    })
+                }
+                Err(e) => {
+                    eprintln!("Error in getting a item: {}", e);
+                    None
+                }
+            }
+        }).collect()
 }

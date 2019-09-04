@@ -7,7 +7,8 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-tokio = "0.2.0-alpha.2"
+tokio = "0.2.0-alpha.4"
 tokio-postgres = { path = "../../rust-postgres/tokio-postgres", features=["runtime"] }
 futures-preview = { version = "=0.3.0-alpha.18", features = ["async-await"] }
 futures-util-preview = { version = "0.3.0-alpha.18", features = ["async-await"] }
+bigdecimal = "0.1.0"
