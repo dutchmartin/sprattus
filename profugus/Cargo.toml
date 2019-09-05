@@ -9,3 +9,5 @@ tokio-postgres = "0.4.0-rc.3"
 tokio = "^0.1.0"
 futures = "0.1.28"
 parking_lot = "0.9.0"
+
+profugus-derive = { version = "*", path = "../profugus-derive" }

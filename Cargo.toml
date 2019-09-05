@@ -7,5 +7,6 @@ members = [
     "tokio-postgres-example",
     "profugus",
     "profugus-example",
+    "profugus-derive"
 ]
 
