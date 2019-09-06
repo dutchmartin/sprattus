@@ -1,10 +1,10 @@
 use tokio;
 use profugus::*;
 
-fn main() -> Result<(), Error> {
-    let mut runtime = tokio::runtime::Runtime::new().expect("Unable to create a runtime");
-    let conn = runtime.block_on(PGConnection::new("postgresql://localhost/dellstore2?user=tg"))?;
-    let number_of_products : Vec<Count> = runtime.block_on(conn.query("select count(*) as count from products"))?;
+#[tokio::main]
+async fn main() -> Result<(), Error> {
+    let conn = PGConnection::new("postgresql://localhost/dellstore2?user=tg").await?;
+    let number_of_products : Vec<Count> = conn.query("select count(*) as count from products").await?;
     dbg!(number_of_products);
     Ok(())
 }

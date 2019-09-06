@@ -8,6 +8,4 @@ edition = "2018"
 
 [dependencies]
 profugus = {path = "../profugus"}
-tokio = "^0.1.0"
-futures = "0.1.28"
-bigdecimal = "0.0.14"
+tokio = "0.2.0-alpha.4"

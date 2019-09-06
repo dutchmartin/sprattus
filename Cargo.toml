@@ -1,12 +1,9 @@
 [workspace]
-
 members = [
     "tokio-postgres-async-await-try",
-    "async-example",
     "sync-diesel-example",
     "tokio-postgres-example",
     "profugus",
     "profugus-example",
-    "profugus-derive"
+    "profugus-derive",
 ]
-

@@ -1,7 +1,6 @@
-use futures::{
-    future::Future,
-    stream::Stream
-};
+use futures_util::try_future::TryFutureExt;
+use futures_util::future::FutureExt;
+use futures::TryStreamExt;
 use tokio_postgres::*;
 use parking_lot::*;
 use std::sync::Arc;
@@ -21,39 +20,32 @@ impl PGConnection {
     ///
     /// let conn = PGConnection::new("postgresql://localhost/dellstore2?user=tg");
     /// ```
-    pub fn new(connection_string: &str) -> Box<dyn Future<Item = PGConnection, Error = tokio_postgres::Error> + Send> {
-            let fut = tokio_postgres::connect(connection_string, NoTls)
-            .map(|(client, connection)| {
-                let connection = connection.map_err(|e| eprintln!("connection error: {}", e));
-                tokio::spawn(connection);
-                PGConnection{
-                    client: Arc::new(Mutex::new(client))
-                }
-            });
-        Box::new(fut)
+    pub async fn new(connection_string: &str) -> Result<PGConnection,Error> {
+        let (client, connection) = tokio_postgres::connect(connection_string, NoTls).await?;
+
+        let connection = connection
+            .map_err(|e| panic!("connection error: {}", e))
+            .map(|conn|conn.unwrap());
+        tokio::spawn(connection);
+        Ok(PGConnection{
+            client: Arc::new(Mutex::new(client))
+        })
     }
 
-
-    pub fn query<T>(self, sql: &str) -> Box<dyn Future<Item=Vec<T>, Error=error::Error> + Send>
+    pub async fn query<T>(self, sql: &str) -> Result<Vec<T>, Error>
     where T: FromSql
     {
-        let prepared_client = self.client
+        let statement = self.client
             .lock()
-            //.unwrap()
-            .prepare(sql);
-        let returned_future = prepared_client
-            .and_then(move |statement|{
-                self.client
-                    .lock()
-                    //.unwrap()
-                    .query(&statement, &[]).collect()
+            .prepare(sql)
+            .await?;
+        self.client
+            .lock()
+            .query(&statement, &[])
+            .map_ok(|row|{
+                T::from_row(&row)
             })
-            .map(move |rows|{
-                rows.iter().map(move |row|{
-                    T::from_row(row)
-                }).collect()
-            });
-        Box::new(returned_future)
+            .try_collect::<Vec<T>>().await
     }
 }
 

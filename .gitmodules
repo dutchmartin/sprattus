@@ -1,4 +1,0 @@
-[submodule "rust-postgres"]
-	path = rust-postgres
-	url = https://github.com/sfackler/rust-postgres.git
-	branch = std-futures
