@@ -37,7 +37,20 @@ impl PGConnection {
     }
 
     /// Query multiple rows of a table.
+    /// Example:
+    /// ```
+    /// use profugus::PGConnection;
+    /// use profugus::FromSql;
     ///
+    /// #[derive(FromSql)]
+    /// struct Product {
+    ///     prod_id: i32,
+    ///     title: String
+    /// }
+    /// let conn = PGConnection::new("postgresql://localhost/dellstore2?user=tg").await;
+    /// let product_list : Vec<Product> = conn.query_multiple("SELECT prod_id, title FROM Products LIMIT 3", &[]).unwrap();
+    ///
+    /// ```
     pub async fn query_multiple<T>(self, sql: &str, args: &[&dyn ToSql]) -> Result<Vec<T>, Error>
     where
         T: FromSql,
@@ -53,6 +66,19 @@ impl PGConnection {
     }
 
     /// Get a single row of a table.
+    /// Example:
+    /// ```
+    /// use profugus::PGConnection;
+    /// use profugus::FromSql;
+    ///
+    /// #[derive(FromSql)]
+    /// struct Product {
+    ///     prod_id: i32,
+    ///     title: String
+    /// }
+    /// let conn = PGConnection::new("postgresql://localhost/dellstore2?user=tg").await;
+    /// let product_list : Product = conn.query_multiple("SELECT prod_id, title FROM Products LIMIT 1", &[]).unwrap();
+    /// ```
     #[allow(unused_variables)]
     pub async fn query_single<T>(self, sql: &str, args: &[&dyn ToSql]) -> Result<T, Error>
     where
