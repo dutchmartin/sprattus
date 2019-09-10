@@ -1,9 +1,9 @@
 extern crate proc_macro;
 
-use proc_macro2::{TokenTree};
+use proc_macro2::TokenTree;
 use quote::quote;
-use syn::{parse_macro_input, DeriveInput, Data::Struct };
 use syn::export::TokenStream2;
+use syn::{parse_macro_input, Data::Struct, DeriveInput};
 
 #[proc_macro_derive(FromSql)]
 pub fn from_sql(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
@@ -20,16 +20,19 @@ pub fn from_sql(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                     Some(ident) => {
                         fields.push(TokenStream2::from(TokenTree::from(ident)));
                     }
-                    _ => { panic!("Cannot implement FromSql on a tuple struct") }
+                    _ => panic!("Cannot implement FromSql on a tuple struct"),
                 }
             }
         }
-        _ => { panic!(format!("Deriving on {}, which is not a struct, is not supported", name.to_string())) }
+        _ => panic!(format!(
+            "Deriving on {}, which is not a struct, is not supported",
+            name.to_string()
+        )),
     };
 
     // Build the output.
     let expanded = quote! {
-        use profugus::{FromSql, Row};
+        use profugus::Row;
 
         impl FromSql for #name {
             fn from_row(row: &Row) -> Self {

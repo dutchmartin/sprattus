@@ -18,7 +18,7 @@ impl PGConnection {
     ///
     /// Creates a new connection to the database.
     ///
-    /// example
+    /// Example
     /// ```
     /// use profugus::*;
     ///
@@ -41,15 +41,31 @@ impl PGConnection {
     /// ```
     /// use profugus::PGConnection;
     /// use profugus::FromSql;
+    /// use tokio::prelude::*;
     ///
-    /// #[derive(FromSql)]
+    /// #[derive(FromSql, Eq, PartialEq, Debug)]
     /// struct Product {
     ///     prod_id: i32,
     ///     title: String
     /// }
-    /// let conn = PGConnection::new("postgresql://localhost/dellstore2?user=tg").await;
-    /// let product_list : Vec<Product> = conn.query_multiple("SELECT prod_id, title FROM Products LIMIT 3", &[]).unwrap();
-    ///
+    /// #[tokio::main]
+    /// async fn main() {
+    /// let conn = PGConnection::new("postgresql://localhost/dellstore2?user=tg").await.unwrap();
+    /// let product_list : Vec<Product> = conn.query_multiple("SELECT prod_id, title FROM Products LIMIT 3", &[]).await.unwrap();
+    /// assert_eq!(product_list,
+    /// vec!(Product {
+    ///		prod_id : 1,
+    ///		title : String::from("ACADEMY ACADEMY")
+    ///	},
+    ///	Product {
+    ///		prod_id : 2,
+    ///		title : String::from("ACADEMY ACE")
+    ///	},
+    ///	Product {
+    ///		prod_id : 3,
+    ///		title : String::from("ACADEMY ADAPTATION")
+    ///	}));
+    /// }
     /// ```
     pub async fn query_multiple<T>(self, sql: &str, args: &[&dyn ToSql]) -> Result<Vec<T>, Error>
     where
@@ -65,20 +81,25 @@ impl PGConnection {
             .await
     }
 
-    /// Get a single row of a table.
-    /// Example:
-    /// ```
-    /// use profugus::PGConnection;
-    /// use profugus::FromSql;
-    ///
-    /// #[derive(FromSql)]
-    /// struct Product {
-    ///     prod_id: i32,
-    ///     title: String
-    /// }
-    /// let conn = PGConnection::new("postgresql://localhost/dellstore2?user=tg").await;
-    /// let product_list : Product = conn.query_multiple("SELECT prod_id, title FROM Products LIMIT 1", &[]).unwrap();
-    /// ```
+//    / Get a single row of a table.
+//    / Example:
+//    / ```
+//    / use profugus::PGConnection;
+//    / use tokio::prelude::*;
+//    / use profugus::FromSql;
+//    /
+//    / #[derive(FromSql, Eq, PartialEq, Debug)]
+//    / struct Product {
+//    /     prod_id: i32,
+//    /     title: String
+//    / }
+//    / #[tokio::main]
+//    / async fn main() {
+//    / let conn = PGConnection::new("postgresql://localhost/dellstore2?user=tg").await;
+//    / let product : Product = conn.query("SELECT prod_id, title FROM Products LIMIT 1", &[]).unwrap();
+//    / assert_eq!(product, Product{ prod_id: 1, title: String::from("ACADEMY ACADEMY")});
+//    / }
+//    / ```
     #[allow(unused_variables)]
     pub async fn query<T>(self, sql: &str, args: &[&dyn ToSql]) -> Result<T, Error>
     where

@@ -8,5 +8,5 @@ pub struct Product {
     pub actor: String,
     pub price: BigDecimal,
     pub special: Option<i16>,
-    pub common_prod_id: i32
+    pub common_prod_id: i32,
 }
