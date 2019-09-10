@@ -80,7 +80,7 @@ impl PGConnection {
     /// let product_list : Product = conn.query_multiple("SELECT prod_id, title FROM Products LIMIT 1", &[]).unwrap();
     /// ```
     #[allow(unused_variables)]
-    pub async fn query_single<T>(self, sql: &str, args: &[&dyn ToSql]) -> Result<T, Error>
+    pub async fn query<T>(self, sql: &str, args: &[&dyn ToSql]) -> Result<T, Error>
     where
         T: FromSql + Default,
     {
@@ -130,7 +130,7 @@ impl PGConnection {
         unimplemented!()
     }
 
-    pub async fn delete_multiple<T>(item: T) -> Result<(), Error>
+    pub async fn delete_multiple<T>(item: Vec<T>) -> Result<(), Error>
     where
         T: Identifiable,
     {
