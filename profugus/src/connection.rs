@@ -38,6 +38,7 @@ impl PGConnection {
 
     ///
     /// Query multiple rows of a table.
+    ///
     /// Example:
     /// ```
     /// use profugus::PGConnection;
@@ -82,7 +83,9 @@ impl PGConnection {
             .await
     }
 
+    ///
     /// Get a single row of a table.
+    ///
     /// Example:
     /// ```
     /// use profugus::PGConnection;
@@ -102,15 +105,21 @@ impl PGConnection {
     ///     assert_eq!(product, Product{ prod_id: 1, title: String::from("ACADEMY ACADEMY")});
     /// }
     /// ```
-    #[allow(unused_variables)]
     pub async fn query<T>(self, sql: &str, args: &[&dyn ToSql]) -> Result<T, Error>
     where
         T: FromSql,
     {
-        unimplemented!()
+        // TODO: Figure out a way to do this more efficiently without panic on fail.
+        let mut results: Vec<T> = self.query_multiple(&sql, args).await?;
+        let result = results
+            .pop()
+            .expect(format!("The result of the query `{}` should contain at least one row", &sql).as_ref());
+        Ok(result)
     }
 
+    ///
     /// Update a single rust value in the database.
+    ///
     /// Example:
     /// ```
     /// use profugus::PGConnection;
@@ -140,12 +149,14 @@ impl PGConnection {
     /// ```
     pub async fn update<T>(self, item: T) -> Result<(), Error>
     where
-        T: Identifiable + ToSql,
+        T: Identifiable + Sized + ToSql,
     {
-        unimplemented!()
+        unimplemented!();
     }
 
+    ///
     /// Update multiple rust values in the database.
+    ///
     /// Example:
     /// ```
     /// use profugus::PGConnection;
@@ -186,12 +197,15 @@ impl PGConnection {
     /// ```
     pub async fn update_multiple<T>(self, items: Vec<T>) -> Result<(), Error>
     where
-        T: Identifiable + ToSql,
+        T: Identifiable + Sized + ToSql,
     {
-        unimplemented!()
+        unimplemented!();
     }
 
+    ///
     /// Create a new row in the database.
+    ///
+    /// Example:
     /// ```
     /// use profugus::PGConnection;
     /// use tokio::prelude::*;
@@ -215,14 +229,17 @@ impl PGConnection {
     ///     conn.delete(product).await.unwrap();
     /// }
     /// ```
-    pub async fn create<T>(self, item: T) -> Result<dyn Identifiable, Error>
+    pub async fn create<T>(self, item: T) -> Result<T, Error>
     where
-        T: Identifiable + ToSql,
+        T: Identifiable + Sized + ToSql,
     {
-        unimplemented!()
+        unimplemented!();
     }
 
+    ///
     /// Create new rows in the database.
+    ///
+    /// Example:
     /// ```
     /// use profugus::PGConnection;
     /// use tokio::prelude::*;
@@ -250,14 +267,17 @@ impl PGConnection {
     ///     conn.delete(products).await.unwrap();
     /// }
     /// ```
-    pub async fn create_multiple<T>(self, items: Vec<T>) -> Result<Vec<dyn Identifiable>, Error>
+    pub async fn create_multiple<T>(self, items: Vec<T>) -> Result<Vec<T>, Error>
     where
-        T: Identifiable + ToSql,
+        T: Identifiable + Sized + ToSql,
     {
-        unimplemented!()
+        unimplemented!();
     }
 
+    ///
     /// Deletes a item.
+    ///
+    /// Example:
     /// ```
     /// use profugus::PGConnection;
     /// use tokio::prelude::*;
@@ -283,12 +303,15 @@ impl PGConnection {
     /// ```
     pub async fn delete<T>(item: T) -> Result<(), Error>
     where
-        T: Identifiable,
+        T: Identifiable + Sized,
     {
-        unimplemented!()
+        unimplemented!();
     }
 
+    ///
     /// Deletes a list of items.
+    ///
+    /// Example:
     /// ```
     /// use profugus::PGConnection;
     /// use tokio::prelude::*;
@@ -318,8 +341,8 @@ impl PGConnection {
     /// ```
     pub async fn delete_multiple<T>(item: Vec<T>) -> Result<(), Error>
     where
-        T: Identifiable,
+        T: Identifiable + Sized,
     {
-        unimplemented!()
+        unimplemented!();
     }
 }
