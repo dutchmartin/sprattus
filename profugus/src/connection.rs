@@ -36,6 +36,7 @@ impl PGConnection {
         })
     }
 
+    ///
     /// Query multiple rows of a table.
     /// Example:
     /// ```
@@ -110,7 +111,33 @@ impl PGConnection {
     }
 
     /// Update a single rust value in the database.
-    #[allow(unused_variables)]
+    /// Example:
+    /// ```
+    /// use profugus::PGConnection;
+    /// use tokio::prelude::*;
+    /// use profugus::FromSql;
+    ///
+    /// #[derive(FromSql, ToSql, Identifiable, Eq, PartialEq, Debug)]
+    /// struct Product {
+    ///     prod_id: i32,
+    ///     title: String
+    /// }
+    ///
+    /// #[tokio::main]
+    /// async fn main() {
+    ///     let conn = PGConnection::new("postgresql://localhost/dellstore2?user=tg").await.unwrap();
+    ///     // Change a existing record in the database.
+    ///     conn.update(Product { prod_id : 50, title: String::from("Rust ORM")}).await.expect("update failed");
+    ///
+    ///     let product : Product = conn.query("SELECT prod_id, title FROM Products where prod_id = 50", &[]).await.unwrap();
+    ///     assert_eq!(product, Product{ prod_id: 50, title: String::from("Rust ORM")});
+    ///     // Change it back to it's original value.
+    ///     conn.update(Product { prod_id : 50, title: String::from("ACADEMY BAKED")}).await.expect("update failed");
+    ///
+    ///     let product : Product = conn.query("SELECT prod_id, title FROM Products where prod_id = 50", &[]).await.unwrap();
+    ///     assert_eq!(product, Product{ prod_id: 50, title: String::from("ACADEMY BAKED")});
+    /// }
+    /// ```
     pub async fn update<T>(self, item: T) -> Result<(), Error>
     where
         T: Identifiable + ToSql,
@@ -119,7 +146,44 @@ impl PGConnection {
     }
 
     /// Update multiple rust values in the database.
-    #[allow(unused_variables)]
+    /// Example:
+    /// ```
+    /// use profugus::PGConnection;
+    /// use tokio::prelude::*;
+    /// use profugus::FromSql;
+    ///
+    /// #[derive(FromSql, ToSql, Identifiable, Eq, PartialEq, Debug)]
+    /// struct Product {
+    ///     prod_id: i32,
+    ///     title: String
+    /// }
+    ///
+    /// #[tokio::main]
+    /// async fn main() {
+    ///     let conn = PGConnection::new("postgresql://localhost/dellstore2?user=tg").await.unwrap();
+    ///     let new_products = vec!(
+    ///             Product{ prod_id: 60, title: String::from("Rust ACADEMY") },
+    ///             Product{ prod_id: 61, title: String::from("SQL ACADEMY") },
+    ///             Product{ prod_id: 62, title: String::from("Backend development training") },
+    ///         );
+    ///     // Change a existing record in the database.
+    ///     conn.update_multiple(new_products).await.expect("update failed");
+    ///
+    ///     let products : Vec<Product> = conn.query("SELECT prod_id, title FROM Products where prod_id in (60, 61, 62)", &[]).await.unwrap();
+    ///     assert_eq!(products, new_products);
+    ///
+    ///     let old_products = vec!(
+    ///             Product{ prod_id: 50, title: String::from("ACADEMY BEAST") },
+    ///             Product{ prod_id: 50, title: String::from("ACADEMY BEAUTY") },
+    ///             Product{ prod_id: 50, title: String::from("ACADEMY BED") },
+    ///         );
+    ///     // Change it back to it's original value.
+    ///     conn.update_multiple(old_products).await.expect("update failed");
+    ///
+    ///     let product_list : Vec<Product> = conn.query("SELECT prod_id, title FROM Products where prod_id in (60, 61, 62)", &[]).await.unwrap();
+    ///     assert_eq!(product_list, old_products);
+    /// }
+    /// ```
     pub async fn update_multiple<T>(self, items: Vec<T>) -> Result<(), Error>
     where
         T: Identifiable + ToSql,
@@ -128,7 +192,6 @@ impl PGConnection {
     }
 
     /// Create a new row in the database.
-    #[allow(unused_variables)]
     pub async fn create<T>(self, item: T) -> Result<Vec<T>, Error>
     where
         T: Identifiable + ToSql,
@@ -137,7 +200,6 @@ impl PGConnection {
     }
 
     /// Create new rows in the database.
-    #[allow(unused_variables)]
     pub async fn create_multiple<T>(self, items: Vec<T>) -> Result<Vec<T>, Error>
     where
         T: Identifiable + ToSql,
