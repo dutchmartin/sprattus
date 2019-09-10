@@ -192,7 +192,30 @@ impl PGConnection {
     }
 
     /// Create a new row in the database.
-    pub async fn create<T>(self, item: T) -> Result<Vec<T>, Error>
+    /// ```
+    /// use profugus::PGConnection;
+    /// use tokio::prelude::*;
+    /// use profugus::FromSql;
+    ///
+    /// #[derive(FromSql, ToSql, Identifiable, Eq, PartialEq, Debug)]
+    /// struct Product {
+    ///     prod_id: i32,
+    ///     title: String
+    /// }
+    ///
+    /// #[tokio::main]
+    /// async fn main() {
+    ///     let conn = PGConnection::new("postgresql://localhost/dellstore2?user=tg").await.unwrap();
+    ///     let new_product = Product {prod_id: 0, title: String::from("Sql insert lesson")};
+    ///     let id = conn.create(new_product).await.unwrap().get_id();
+    ///     let product = conn.query("SELECT prod_id, title from Products where prod_id = $1", &[id]);
+    ///
+    ///     assert_eq!(new_product, product);
+    ///
+    ///     conn.delete(product).await.unwrap();
+    /// }
+    /// ```
+    pub async fn create<T>(self, item: T) -> Result<dyn Identifiable, Error>
     where
         T: Identifiable + ToSql,
     {
@@ -200,7 +223,34 @@ impl PGConnection {
     }
 
     /// Create new rows in the database.
-    pub async fn create_multiple<T>(self, items: Vec<T>) -> Result<Vec<T>, Error>
+    /// ```
+    /// use profugus::PGConnection;
+    /// use tokio::prelude::*;
+    /// use profugus::FromSql;
+    ///
+    /// #[derive(FromSql, ToSql, Identifiable, Eq, PartialEq, Debug)]
+    /// struct Product {
+    ///     prod_id: i32,
+    ///     title: String
+    /// }
+    ///
+    /// #[tokio::main]
+    /// async fn main() {
+    ///     let conn = PGConnection::new("postgresql://localhost/dellstore2?user=tg").await.unwrap();
+    ///     let new_products = vec!(
+    ///         Product {prod_id: 0, title: String::from("Sql insert lesson")},
+    ///         Product {prod_id: 0, title: String::from("Rust macro lesson")},
+    ///         Product {prod_id: 0, title: String::from("Postgres data types lesson")};
+    ///     );
+    ///     let id = conn.create(new_product).await.unwrap().get_id();
+    ///     let products = conn.query_multiple("SELECT prod_id, title from Products where prod_id = $1", &[id]);
+    ///
+    ///     assert_eq!(new_products, products);
+    ///
+    ///     conn.delete(products).await.unwrap();
+    /// }
+    /// ```
+    pub async fn create_multiple<T>(self, items: Vec<T>) -> Result<Vec<dyn Identifiable>, Error>
     where
         T: Identifiable + ToSql,
     {
