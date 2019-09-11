@@ -48,11 +48,10 @@ pub fn from_sql(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 }
 
 // TODO: remove attributes in the derived struct so the feature flag #![feature(custom_attribute)] is not needed.
-#[proc_macro_derive(Identifiable)]
-pub fn identifiable_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+#[proc_macro_derive(ToSql)]
+pub fn to_sql_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let derive_input = parse_macro_input!(input as DeriveInput);
 
-    // Gather data.
     let name = &derive_input.ident;
 
     match derive_input.data {

@@ -11,7 +11,7 @@ async fn main() -> Result<(), Error> {
     Ok(())
 }
 
-#[derive(Identifiable, FromSql, Debug, Default)]
+#[derive(ToSql, FromSql, Debug, Default)]
 #[profugus(table = "count")]
 struct Count {
     #[profugus(primary_key)]

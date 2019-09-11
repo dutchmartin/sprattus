@@ -5,7 +5,6 @@ use futures_util::StreamExt;
 use parking_lot::*;
 use std::sync::Arc;
 use tokio;
-use tokio_postgres::types::ToSql;
 use tokio_postgres::*;
 
 use crate::*;
@@ -130,7 +129,7 @@ impl PGConnection {
     /// use tokio::prelude::*;
     /// use profugus::FromSql;
     ///
-    /// #[derive(FromSql, ToSql, Identifiable, Eq, PartialEq, Debug)]
+    /// #[derive(FromSql, ToSql, Eq, PartialEq, Debug)]
     /// struct Product {
     ///     prod_id: i32,
     ///     title: String
@@ -153,7 +152,7 @@ impl PGConnection {
     /// ```
     pub async fn update<T>(self, item: T) -> Result<(), Error>
     where
-        T: Identifiable + Sized + ToSql,
+        T: Sized + ToSql,
     {
         unimplemented!();
     }
@@ -167,7 +166,7 @@ impl PGConnection {
     /// use tokio::prelude::*;
     /// use profugus::FromSql;
     ///
-    /// #[derive(FromSql, ToSql, Identifiable, Eq, PartialEq, Debug)]
+    /// #[derive(FromSql, ToSql, Eq, PartialEq, Debug)]
     /// struct Product {
     ///     prod_id: i32,
     ///     title: String
@@ -201,7 +200,7 @@ impl PGConnection {
     /// ```
     pub async fn update_multiple<T>(self, items: Vec<T>) -> Result<(), Error>
     where
-        T: Identifiable + Sized + ToSql,
+        T: Sized + ToSql,
     {
         unimplemented!();
     }
@@ -216,7 +215,7 @@ impl PGConnection {
     /// use tokio::prelude::*;
     /// use profugus::FromSql;
     ///
-    /// #[derive(FromSql, ToSql, Identifiable, Eq, PartialEq, Debug)]
+    /// #[derive(FromSql, ToSql, Eq, PartialEq, Debug)]
     /// struct Product {
     ///     #[profugus(primary_key)]
     ///     prod_id: i32,
@@ -237,7 +236,7 @@ impl PGConnection {
     /// ```
     pub async fn create<T>(self, item: T) -> Result<T, Error>
     where
-        T: Identifiable + Sized + ToSql + FromSql,
+        T: Sized + ToSql + FromSql,
     {
         // TODO: Determine which column's of T can be inserted into.
         let insert = self.client.lock().prepare(
@@ -251,7 +250,8 @@ impl PGConnection {
         result
             .map_ok(|row| T::from_row(&row))
             .try_collect::<Vec<T>>()
-            .await
+            .await?
+            // TODO: Figure out a way to do this more efficiently without panic on fail.
             .pop()
             .expect(format!(
                 "The result of the query `{}` should contain at least one row",
@@ -268,7 +268,7 @@ impl PGConnection {
     /// use tokio::prelude::*;
     /// use profugus::FromSql;
     ///
-    /// #[derive(FromSql, ToSql, Identifiable, Eq, PartialEq, Debug)]
+    /// #[derive(FromSql, ToSql, Eq, PartialEq, Debug)]
     /// struct Product {
     ///     prod_id: i32,
     ///     title: String
@@ -292,7 +292,7 @@ impl PGConnection {
     /// ```
     pub async fn create_multiple<T>(self, items: Vec<T>) -> Result<Vec<T>, Error>
     where
-        T: Identifiable + Sized + ToSql,
+        T: Sized + ToSql,
     {
         unimplemented!();
     }
@@ -306,7 +306,7 @@ impl PGConnection {
     /// use tokio::prelude::*;
     /// use profugus::FromSql;
     ///
-    /// #[derive(FromSql, ToSql, Identifiable, Eq, PartialEq, Debug)]
+    /// #[derive(FromSql, ToSql, Eq, PartialEq, Debug)]
     /// struct Product {
     ///     prod_id: i32,
     ///     title: String
@@ -326,7 +326,7 @@ impl PGConnection {
     /// ```
     pub async fn delete<T>(item: T) -> Result<(), Error>
     where
-        T: Identifiable + Sized,
+        T: ToSql + Sized,
     {
         unimplemented!();
     }
@@ -340,7 +340,7 @@ impl PGConnection {
     /// use tokio::prelude::*;
     /// use profugus::FromSql;
     ///
-    /// #[derive(FromSql, ToSql, Identifiable, Eq, PartialEq, Debug)]
+    /// #[derive(FromSql, ToSql, Eq, PartialEq, Debug)]
     /// struct Product {
     ///     prod_id: i32,
     ///     title: String
@@ -364,7 +364,7 @@ impl PGConnection {
     /// ```
     pub async fn delete_multiple<T>(item: Vec<T>) -> Result<(), Error>
     where
-        T: Identifiable + Sized,
+        T: ToSql + Sized,
     {
         unimplemented!();
     }
