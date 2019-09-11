@@ -54,6 +54,8 @@ pub fn to_sql_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream 
 
     let name = &derive_input.ident;
 
+
+    // derive
     match derive_input.data {
         Struct(data) => {
             // Check if the field contains a primary key attribute.
@@ -97,13 +99,13 @@ fn get_field_name(field: &Field) -> &Ident {
 
 fn build_identifiable_impl(name: &Ident, primary_key: &Ident) -> proc_macro::TokenStream {
     let tokens = quote!(
-    struct #name {
-        count: i64,
-    }
-        impl Identifiable for #name {
-            #[inline]
-            fn get_primary_key() -> &'static str {
-                return stringify!(#primary_key);
+        impl ToSql for #name {
+            const PRIMARY_KEY = stringify!(#primary_key);
+
+            const FIELDS = ["TO", "DO"];
+
+            fn get_query_params -> &[dyn ToSql] {
+                unimplemented!()
             }
         }
     );
