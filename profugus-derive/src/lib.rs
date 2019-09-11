@@ -1,9 +1,9 @@
 extern crate proc_macro;
 
-use proc_macro2::{TokenTree, Ident};
+use proc_macro2::{Ident, TokenTree};
 use quote::quote;
 use syn::export::TokenStream2;
-use syn::{parse_macro_input, Data::Struct, DeriveInput, Field, Attribute};
+use syn::{parse_macro_input, Attribute, Data::Struct, DeriveInput, Field};
 
 #[proc_macro_derive(FromSql)]
 pub fn from_sql(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
@@ -60,13 +60,15 @@ pub fn identifiable_derive(input: proc_macro::TokenStream) -> proc_macro::TokenS
             // Check if the field contains a primary key attribute.
             'key_name_search: for field in &data.fields {
                 dbg!(field);
-                 for attr in &field.attrs {
+                for attr in &field.attrs {
                     for segment in &attr.path.segments {
-                        if segment.ident.to_string().eq("profugus") /*todo add check for pk as argument*/ {
+                        if segment.ident.to_string().eq("profugus")
+                        /*todo add check for pk as argument*/
+                        {
                             return build_identifiable_impl(name, get_field_name(field));
                         }
                     }
-                 }
+                }
             }
             // Check if the field contains a
             for field in &data.fields {
@@ -83,7 +85,6 @@ pub fn identifiable_derive(input: proc_macro::TokenStream) -> proc_macro::TokenS
             name.to_string()
         )),
     };
-
 }
 
 fn get_field_name(field: &Field) -> &Ident {
@@ -112,7 +113,7 @@ fn build_identifiable_impl(name: &Ident, primary_key: &Ident) -> proc_macro::Tok
 
 fn contains_ident_with(name: &'static str, idents: Vec<Ident>) -> bool {
     for ident in idents {
-        if ident.to_string().eq("primary_key"){
+        if ident.to_string().eq("primary_key") {
             return true;
         }
     }
