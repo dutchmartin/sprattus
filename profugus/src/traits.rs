@@ -1,5 +1,5 @@
-use tokio_postgres::Row;
 use tokio_postgres::types::ToSql as PGToSql;
+use tokio_postgres::Row;
 
 pub trait FromSql {
     ///
@@ -9,7 +9,6 @@ pub trait FromSql {
 }
 
 pub trait ToSql {
-
     ///
     /// The name of the primary key.
     ///
@@ -19,12 +18,11 @@ pub trait ToSql {
     /// The fields that contain the data of the table.
     /// The primary key is excluded from this list.
     ///
-    const FIELDS : &'static [&'static str];
+    const FIELDS: &'static [&'static str];
 
     ///
     /// The method that implements converting the fields
     /// into a array of items that implement the ToSql trait of rust_postgres.
     ///
     fn get_query_params(self) -> &[dyn PGToSql];
-
 }
