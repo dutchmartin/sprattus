@@ -47,14 +47,15 @@ pub fn from_sql(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     proc_macro::TokenStream::from(expanded)
 }
 
+// TODO: remove attributes in the derived struct so the feature flag #![feature(custom_attribute)] is not needed.
 #[proc_macro_derive(Identifiable)]
 pub fn identifiable_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let input = parse_macro_input!(input as DeriveInput);
+    let derive_input = parse_macro_input!(input as DeriveInput);
 
     // Gather data.
-    let name = &input.ident;
+    let name = &derive_input.ident;
 
-    match input.data {
+    match derive_input.data {
         Struct(data) => {
             // Check if the field contains a primary key attribute.
             'key_name_search: for field in &data.fields {
@@ -67,13 +68,14 @@ pub fn identifiable_derive(input: proc_macro::TokenStream) -> proc_macro::TokenS
                     }
                  }
             }
-            // Check if the fie
+            // Check if the field contains a
             for field in &data.fields {
                 let field_name = get_field_name(field);
                 if field_name.to_string().contains("id") {
                     return build_identifiable_impl(name, field_name);
                 }
             }
+
             panic!("no field with a name containing `id` or field with the 'primary_key' attribute found");
         }
         _ => panic!(format!(
@@ -81,6 +83,7 @@ pub fn identifiable_derive(input: proc_macro::TokenStream) -> proc_macro::TokenS
             name.to_string()
         )),
     };
+
 }
 
 fn get_field_name(field: &Field) -> &Ident {
@@ -93,7 +96,10 @@ fn get_field_name(field: &Field) -> &Ident {
 }
 
 fn build_identifiable_impl(name: &Ident, primary_key: &Ident) -> proc_macro::TokenStream {
-    let expanded = quote!(
+    let tokens = quote!(
+    struct #name {
+        count: i64,
+    }
         impl Identifiable for #name {
             #[inline]
             fn get_primary_key() -> &'static str {
@@ -101,7 +107,7 @@ fn build_identifiable_impl(name: &Ident, primary_key: &Ident) -> proc_macro::Tok
             }
         }
     );
-    proc_macro::TokenStream::from(expanded)
+    tokens.into()
 }
 
 fn contains_ident_with(name: &'static str, idents: Vec<Ident>) -> bool {

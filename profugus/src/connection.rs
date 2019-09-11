@@ -211,12 +211,14 @@ impl PGConnection {
     ///
     /// Example:
     /// ```
+    /// #![feature(custom_attribute)]
     /// use profugus::PGConnection;
     /// use tokio::prelude::*;
     /// use profugus::FromSql;
     ///
     /// #[derive(FromSql, ToSql, Identifiable, Eq, PartialEq, Debug)]
     /// struct Product {
+    ///     #[profugus(primary_key)]
     ///     prod_id: i32,
     ///     title: String
     /// }
@@ -235,9 +237,22 @@ impl PGConnection {
     /// ```
     pub async fn create<T>(self, item: T) -> Result<T, Error>
     where
-        T: Identifiable + Sized + ToSql,
+        T: Identifiable + Sized + ToSql + FromSql,
     {
-        unimplemented!();
+        // TODO: Determine which column's of T can be inserted into.
+       let insert = self
+           .client
+           .lock()
+           .prepare("INSERT INTO $table (coll1, coll2) values (coll1value, coll2value) RETURNING *");
+
+        let insert = insert.await?;
+        // Todo: fetch the individual values of the struct in the format of tokio_postgres, like &[coll1, coll2]
+
+        let result = { self.client.lock().query(&insert, T::get_query_params()) };
+        result
+            .map_ok(|row| T::from_row(&row))
+            .try_collect::<Vec<T>>()
+            .await
     }
 
     ///
