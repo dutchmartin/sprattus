@@ -11,7 +11,8 @@ async fn main() -> Result<(), Error> {
     Ok(())
 }
 
-#[derive(FromSql, Debug, Default)]
+#[derive(FromSql, Identifiable, Debug, Default)]
 struct Count {
+    #[profugus(primary_key)]
     count: i64,
 }

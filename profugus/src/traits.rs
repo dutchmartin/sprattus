@@ -5,5 +5,5 @@ pub trait FromSql {
 }
 
 pub trait Identifiable {
-    fn get_primary_key() -> String;
+    fn get_primary_key() -> &'static str;
 }

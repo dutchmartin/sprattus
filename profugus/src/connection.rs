@@ -111,9 +111,13 @@ impl PGConnection {
     {
         // TODO: Figure out a way to do this more efficiently without panic on fail.
         let mut results: Vec<T> = self.query_multiple(&sql, args).await?;
-        let result = results
-            .pop()
-            .expect(format!("The result of the query `{}` should contain at least one row", &sql).as_ref());
+        let result = results.pop().expect(
+            format!(
+                "The result of the query `{}` should contain at least one row",
+                &sql
+            )
+            .as_ref(),
+        );
         Ok(result)
     }
 
