@@ -15,6 +15,7 @@ async fn main() -> Result<(), Error> {
 #[derive(ToSql, FromSql, Debug)]
 #[profugus(table = "crazycount")]
 struct Count {
+    id: i64,
     #[profugus(primary_key)]
     count: i64,
 }

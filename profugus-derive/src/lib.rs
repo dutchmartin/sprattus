@@ -52,7 +52,7 @@ pub fn from_sql(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 #[proc_macro_derive(ToSql)]
 pub fn to_sql_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let derive_input = parse_macro_input!(input as DeriveInput);
-    //dbg!(&derive_input);
+
     let name = &derive_input.ident;
 
     // Set table name to to either the defined attribute value, or fall back on the structs name
@@ -61,18 +61,22 @@ pub fn to_sql_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream 
         None => name.to_string(),
     };
 
+    let mut fields: Vec<String> = Vec::new();
+
     // derive
     match derive_input.data {
         Struct(data) => {
             // Check if the field contains a primary key attribute.
             'key_name_search: for field in &data.fields {
                 for attr in &field.attrs {
-                    for segment in &attr.path.segments {
-                        if segment.ident.to_string().eq("profugus")
-                        // TODO: add check for pk as argument so we are sure we found #[profugus(primary_key)
-                        {
-                            return build_to_sql_impl(name, get_field_name(field), table_name);
+                    'inner: for segment in &attr.path.segments {
+                        match segment.ident.to_string().eq("profugus") {
+                            true => break 'inner,
+                            false => break 'key_name_search
                         }
+                    }
+                    if attr.tokens.to_string().contains("primary_key") {
+                        return build_to_sql_impl(name, get_field_name(field), table_name);
                     }
                 }
             }
