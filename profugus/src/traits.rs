@@ -1,5 +1,6 @@
-use tokio_postgres::types::ToSql as PGToSql;
+use tokio_postgres::types::ToSql as ToSqlItem;
 use tokio_postgres::Row;
+use std::sync::Arc;
 
 pub trait FromSql {
     ///
@@ -10,19 +11,23 @@ pub trait FromSql {
 
 pub trait ToSql {
     ///
-    /// The name of the primary key.
+    /// Returns the name of the table.
     ///
-    const PRIMARY_KEY: &'static str;
+    fn get_table_name() -> &'static str;
+    ///
+    /// Returns the name of the primary key.
+    ///
+    fn get_primary_key() -> &'static str;
 
     ///
     /// The fields that contain the data of the table.
     /// The primary key is excluded from this list.
     ///
-    const FIELDS: &'static [&'static str];
+    fn get_fields() -> &'static [&'static str];
 
     ///
     /// The method that implements converting the fields
     /// into a array of items that implement the ToSql trait of rust_postgres.
     ///
-    fn get_query_params(self) -> &[dyn PGToSql];
+    fn get_query_params(self) -> Arc<[Box<dyn ToSqlItem>]>;
 }

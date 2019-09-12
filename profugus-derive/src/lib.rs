@@ -1,9 +1,11 @@
 extern crate proc_macro;
 
 use proc_macro2::{Ident, TokenTree};
+use proc_macro2::TokenTree::{Group, Literal, Punct, Ident as Ident2};
 use quote::quote;
 use syn::export::TokenStream2;
 use syn::{parse_macro_input, Attribute, Data::Struct, DeriveInput, Field};
+
 
 #[proc_macro_derive(FromSql)]
 pub fn from_sql(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
@@ -51,8 +53,15 @@ pub fn from_sql(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 #[proc_macro_derive(ToSql)]
 pub fn to_sql_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let derive_input = parse_macro_input!(input as DeriveInput);
-
+    //dbg!(&derive_input);
     let name = &derive_input.ident;
+
+    // Set table name to to either the defined attribute value, or fall back on the structs name
+    let table_name : String = match get_table_name_from_attributes(derive_input.attrs) {
+        Some(table_name) => table_name,
+        None => name.to_string()
+    };
+
 
 
     // derive
@@ -60,22 +69,23 @@ pub fn to_sql_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream 
         Struct(data) => {
             // Check if the field contains a primary key attribute.
             'key_name_search: for field in &data.fields {
-                dbg!(field);
+
                 for attr in &field.attrs {
                     for segment in &attr.path.segments {
                         if segment.ident.to_string().eq("profugus")
-                        /*todo add check for pk as argument*/
+                        // TODO: add check for pk as argument so we are sure we found #[profugus(primary_key)
                         {
-                            return build_identifiable_impl(name, get_field_name(field));
+                            return build_to_sql_impl(name, get_field_name(field), table_name);
                         }
                     }
+
                 }
             }
-            // Check if the field contains a
+            // Check if the field contains a field with `id` in the name.
             for field in &data.fields {
                 let field_name = get_field_name(field);
                 if field_name.to_string().contains("id") {
-                    return build_identifiable_impl(name, field_name);
+                    return build_to_sql_impl(name, field_name, table_name);
                 }
             }
 
@@ -97,16 +107,28 @@ fn get_field_name(field: &Field) -> &Ident {
     }
 }
 
-fn build_identifiable_impl(name: &Ident, primary_key: &Ident) -> proc_macro::TokenStream {
+fn build_to_sql_impl(name: &Ident, primary_key: &Ident, table_name : String) -> proc_macro::TokenStream {
     let tokens = quote!(
         impl ToSql for #name {
-            const PRIMARY_KEY = stringify!(#primary_key);
 
-            const FIELDS = ["TO", "DO"];
-
-            fn get_query_params -> &[dyn ToSql] {
-                unimplemented!()
+            #[inline]
+            fn get_table_name() -> &'static str {
+                #table_name
             }
+
+            #[inline]
+            fn get_primary_key() -> &'static str {
+                stringify!(#primary_key)
+            }
+
+            #[inline]
+            fn get_fields() -> &'static [&'static str] {
+               ["TO", "DO"]
+            }
+
+//            fn get_query_params -> Arc<[Box<dyn ToSqlItem>]> {
+//                unimplemented!()
+//            }
         }
     );
     tokens.into()
@@ -114,9 +136,47 @@ fn build_identifiable_impl(name: &Ident, primary_key: &Ident) -> proc_macro::Tok
 
 fn contains_ident_with(name: &'static str, idents: Vec<Ident>) -> bool {
     for ident in idents {
-        if ident.to_string().eq("primary_key") {
+        if ident.to_string().eq(name) {
             return true;
         }
     }
     return false;
+}
+#[inline]
+fn get_table_name_from_attributes(attributes: Vec<Attribute>) -> Option<String> {
+    for attribute in attributes {
+        match attribute.path.segments.first() {
+            Some(segment) => {
+                if ! segment.ident.to_string().eq("profugus") {
+                    continue
+                }
+            }
+            None => continue
+        }
+        'table_name_search: for item in attribute.tokens {
+            match item {
+                Group(group) => {
+                    for token in group.stream() {
+                        match token {
+                            Ident2(ident) => {
+                                if ! ident.to_string().eq("table") {
+                                    break 'table_name_search;                                }
+                            }
+                            Punct(punct) => {
+                                if punct.as_char() != '=' {
+                                    break 'table_name_search;
+                                }
+                            }
+                            Literal(literal) => {
+                                return Some(literal.to_string().replace("\"", ""))
+                            }
+                            _ => break 'table_name_search
+                        }
+                    }
+                },
+                _ => break
+            }
+        }
+    }
+    None
 }

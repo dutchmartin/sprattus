@@ -1,3 +1,4 @@
+#![feature(custom_attribute)]
 use profugus::*;
 use tokio;
 
@@ -7,12 +8,12 @@ async fn main() -> Result<(), Error> {
     let number_of_products: Vec<Count> = conn
         .query_multiple("select count(*) as count from products", &[])
         .await?;
-    dbg!(number_of_products);
+    //dbg!(number_of_products);
     Ok(())
 }
 
-#[derive(ToSql, FromSql, Debug, Default)]
-#[profugus(table = "count")]
+#[derive(ToSql, FromSql, Debug)]
+#[profugus(table = "crazycount")]
 struct Count {
     #[profugus(primary_key)]
     count: i64,
