@@ -30,4 +30,10 @@ pub trait ToSql {
     /// into a array of items that implement the ToSql trait of rust_postgres.
     ///
     fn get_query_params(self) -> Arc<[Box<dyn ToSqlItem>]>;
+
+    ///
+    /// Returns the formatted prepared statement list.
+    /// Example: "$1, $2"
+    ///
+    fn get_prepared_arguments_list() -> &'static str;
 }

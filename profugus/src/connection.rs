@@ -235,22 +235,25 @@ impl PGConnection {
     ///
     ///     assert_eq!(new_product, product);
     ///
-    ///     conn.delete(product).await.unwrap();
     /// }
     /// ```
     pub async fn create<T>(self, item: T) -> Result<T, Error>
     where
         T: Sized + ToSql + FromSql,
     {
+        let sql = format!(
+            "INSERT INTO {table_name} ({fields:?}) values ({prepared_values}) RETURNING *",
+            table_name = T::get_table_name(),
+            fields = T::get_fields(),
+            prepared_values = T::get_prepared_arguments_list(),
+        );
         //        // TODO: Determine which column's of T can be inserted into.
-        //        let insert = self.client.lock().prepare(
-        //            "INSERT INTO $table (coll1, coll2) values (coll1value, coll2value) RETURNING *",
-        //        );
+        //        let insert = self.client.lock().prepare(sql.as_str());
         //
         //        let insert = insert.await?;
         //        // Todo: fetch the individual values of the struct in the format of tokio_postgres, like &[coll1, coll2]
         //
-        //        let result = { self.client.lock().query(&insert, &T::get_query_params()) };
+        //        let result = { self.client.lock().query(&insert, &item::get_query_params()) };
         //        result
         //            .map_ok(|row| T::from_row(&row))
         //            .try_collect::<Vec<T>>()

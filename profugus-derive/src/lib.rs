@@ -81,9 +81,7 @@ pub fn to_sql_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream 
                     'inner: for segment in &attr.path.segments {
                         match segment.ident.to_string().eq("profugus") {
                             true => break 'inner,
-                            false => {
-                                break 'key_name_search
-                            }
+                            false => break 'key_name_search,
                         }
                     }
                     if attr.tokens.to_string().contains("primary_key") {
@@ -121,37 +119,39 @@ fn build_to_sql_impl(
     name: &Ident,
     primary_key: &Ident,
     table_name: String,
-    field_list: Vec<TokenStream2>
+    field_list: Vec<TokenStream2>,
 ) -> proc_macro::TokenStream {
-
+    let prepared_arguments_list = generate_argument_list(field_list.len());
     let tokens = quote!(
-        use std::sync::Arc;
-            impl ToSql for #name {
+    use std::sync::Arc;
+        impl ToSql for #name {
 
-
-                #[inline]
-                fn get_table_name() -> &'static str {
-                    #table_name
-                }
-
-                #[inline]
-                fn get_primary_key() -> &'static str {
-                    stringify!(#primary_key)
-                }
-
-                #[inline]
-                fn get_fields() -> &'static [&'static str] {
-                   [#(stringify!(#field_list)),*]
-                }
-
-                #[inline]
-                fn get_query_params(self) -> Arc<[Box<dyn ToSqlItem>]> {
-                    Arc::new(
-                        [#(Box::from(&self.#field_list)),*]
-                    )
-                }
+            #[inline]
+            fn get_table_name() -> &'static str {
+                #table_name
             }
-        );
+
+            #[inline]
+            fn get_primary_key() -> &'static str {
+                stringify!(#primary_key)
+            }
+
+            #[inline]
+            fn get_fields() -> &'static [&'static str] {
+               [#(stringify!(#field_list)),*]
+            }
+
+            #[inline]
+            fn get_query_params(self) -> Arc<[Box<dyn ToSqlItem>]> {
+                Arc::new(
+                    [#(Box::from(&self.#field_list)),*]
+                )
+            }
+            fn get_prepared_arguments_list() -> &'static str {
+                #prepared_arguments_list
+            }
+        }
+    );
     tokens.into()
 }
 
@@ -191,4 +191,15 @@ fn get_table_name_from_attributes(attributes: Vec<Attribute>) -> Option<String> 
         }
     }
     None
+}
+
+fn generate_argument_list(length: usize) -> String {
+    let mut prepared_arguments_list = String::new();
+    for i in 1..length {
+        match i == length - 1 {
+            true => prepared_arguments_list.push_str(format!("${}", i).as_str()),
+            false => prepared_arguments_list.push_str(format!("${},", i).as_str()),
+        }
+    }
+    prepared_arguments_list
 }
