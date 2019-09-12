@@ -61,22 +61,33 @@ pub fn to_sql_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream 
         None => name.to_string(),
     };
 
-    let mut fields: Vec<String> = Vec::new();
+    let mut fields: Vec<TokenStream2> = Vec::new();
 
     // derive
     match derive_input.data {
         Struct(data) => {
+            for field in data.fields.clone() {
+                match field.ident {
+                    Some(ident) => {
+                        fields.push(TokenStream2::from(TokenTree::from(ident)));
+                    }
+                    _ => panic!("Cannot implement FromSql on a tuple struct"),
+                }
+            }
+
             // Check if the field contains a primary key attribute.
             'key_name_search: for field in &data.fields {
                 for attr in &field.attrs {
                     'inner: for segment in &attr.path.segments {
                         match segment.ident.to_string().eq("profugus") {
                             true => break 'inner,
-                            false => break 'key_name_search
+                            false => {
+                                break 'key_name_search
+                            }
                         }
                     }
                     if attr.tokens.to_string().contains("primary_key") {
-                        return build_to_sql_impl(name, get_field_name(field), table_name);
+                        return build_to_sql_impl(name, get_field_name(field), table_name, fields);
                     }
                 }
             }
@@ -84,7 +95,7 @@ pub fn to_sql_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream 
             for field in &data.fields {
                 let field_name = get_field_name(field);
                 if field_name.to_string().contains("id") {
-                    return build_to_sql_impl(name, field_name, table_name);
+                    return build_to_sql_impl(name, field_name, table_name, fields);
                 }
             }
 
@@ -110,9 +121,13 @@ fn build_to_sql_impl(
     name: &Ident,
     primary_key: &Ident,
     table_name: String,
+    field_list: Vec<TokenStream2>
 ) -> proc_macro::TokenStream {
+
     let tokens = quote!(
+        use std::sync::Arc;
             impl ToSql for #name {
+
 
                 #[inline]
                 fn get_table_name() -> &'static str {
@@ -126,25 +141,20 @@ fn build_to_sql_impl(
 
                 #[inline]
                 fn get_fields() -> &'static [&'static str] {
-                   ["TO", "DO"]
+                   [#(stringify!(#field_list)),*]
                 }
 
-    //            fn get_query_params -> Arc<[Box<dyn ToSqlItem>]> {
-    //                unimplemented!()
-    //            }
+                #[inline]
+                fn get_query_params(self) -> Arc<[Box<dyn ToSqlItem>]> {
+                    Arc::new(
+                        [#(Box::from(&self.#field_list)),*]
+                    )
+                }
             }
         );
     tokens.into()
 }
 
-fn contains_ident_with(name: &'static str, idents: Vec<Ident>) -> bool {
-    for ident in idents {
-        if ident.to_string().eq(name) {
-            return true;
-        }
-    }
-    return false;
-}
 #[inline]
 fn get_table_name_from_attributes(attributes: Vec<Attribute>) -> Option<String> {
     for attribute in attributes {
