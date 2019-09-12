@@ -70,7 +70,11 @@ impl PGConnection {
     ///     );
     /// }
     /// ```
-    pub async fn query_multiple<T>(self, sql: &str, args: &[&dyn ToSqlItem]) -> Result<Vec<T>, Error>
+    pub async fn query_multiple<T>(
+        self,
+        sql: &str,
+        args: &[&dyn ToSqlItem],
+    ) -> Result<Vec<T>, Error>
     where
         T: FromSql,
     {
@@ -238,22 +242,22 @@ impl PGConnection {
     where
         T: Sized + ToSql + FromSql,
     {
-//        // TODO: Determine which column's of T can be inserted into.
-//        let insert = self.client.lock().prepare(
-//            "INSERT INTO $table (coll1, coll2) values (coll1value, coll2value) RETURNING *",
-//        );
-//
-//        let insert = insert.await?;
-//        // Todo: fetch the individual values of the struct in the format of tokio_postgres, like &[coll1, coll2]
-//
-//        let result = { self.client.lock().query(&insert, &T::get_query_params()) };
-//        result
-//            .map_ok(|row| T::from_row(&row))
-//            .try_collect::<Vec<T>>()
-//            .await?
-//            // TODO: Figure out a way to do this more efficiently without panic on fail.
-//            .pop()
-//            .expect("The RETURNING clause of the insert statement did not return a item")
+        //        // TODO: Determine which column's of T can be inserted into.
+        //        let insert = self.client.lock().prepare(
+        //            "INSERT INTO $table (coll1, coll2) values (coll1value, coll2value) RETURNING *",
+        //        );
+        //
+        //        let insert = insert.await?;
+        //        // Todo: fetch the individual values of the struct in the format of tokio_postgres, like &[coll1, coll2]
+        //
+        //        let result = { self.client.lock().query(&insert, &T::get_query_params()) };
+        //        result
+        //            .map_ok(|row| T::from_row(&row))
+        //            .try_collect::<Vec<T>>()
+        //            .await?
+        //            // TODO: Figure out a way to do this more efficiently without panic on fail.
+        //            .pop()
+        //            .expect("The RETURNING clause of the insert statement did not return a item")
         unimplemented!()
     }
 

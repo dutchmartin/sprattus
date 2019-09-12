@@ -1,6 +1,6 @@
+use std::sync::Arc;
 use tokio_postgres::types::ToSql as ToSqlItem;
 use tokio_postgres::Row;
-use std::sync::Arc;
 
 pub trait FromSql {
     ///

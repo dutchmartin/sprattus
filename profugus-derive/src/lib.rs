@@ -1,11 +1,10 @@
 extern crate proc_macro;
 
+use proc_macro2::TokenTree::{Group, Ident as Ident2, Literal, Punct};
 use proc_macro2::{Ident, TokenTree};
-use proc_macro2::TokenTree::{Group, Literal, Punct, Ident as Ident2};
 use quote::quote;
 use syn::export::TokenStream2;
 use syn::{parse_macro_input, Attribute, Data::Struct, DeriveInput, Field};
-
 
 #[proc_macro_derive(FromSql)]
 pub fn from_sql(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
@@ -57,19 +56,16 @@ pub fn to_sql_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream 
     let name = &derive_input.ident;
 
     // Set table name to to either the defined attribute value, or fall back on the structs name
-    let table_name : String = match get_table_name_from_attributes(derive_input.attrs) {
+    let table_name: String = match get_table_name_from_attributes(derive_input.attrs) {
         Some(table_name) => table_name,
-        None => name.to_string()
+        None => name.to_string(),
     };
-
-
 
     // derive
     match derive_input.data {
         Struct(data) => {
             // Check if the field contains a primary key attribute.
             'key_name_search: for field in &data.fields {
-
                 for attr in &field.attrs {
                     for segment in &attr.path.segments {
                         if segment.ident.to_string().eq("profugus")
@@ -78,7 +74,6 @@ pub fn to_sql_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream 
                             return build_to_sql_impl(name, get_field_name(field), table_name);
                         }
                     }
-
                 }
             }
             // Check if the field contains a field with `id` in the name.
@@ -107,30 +102,34 @@ fn get_field_name(field: &Field) -> &Ident {
     }
 }
 
-fn build_to_sql_impl(name: &Ident, primary_key: &Ident, table_name : String) -> proc_macro::TokenStream {
+fn build_to_sql_impl(
+    name: &Ident,
+    primary_key: &Ident,
+    table_name: String,
+) -> proc_macro::TokenStream {
     let tokens = quote!(
-        impl ToSql for #name {
+            impl ToSql for #name {
 
-            #[inline]
-            fn get_table_name() -> &'static str {
-                #table_name
+                #[inline]
+                fn get_table_name() -> &'static str {
+                    #table_name
+                }
+
+                #[inline]
+                fn get_primary_key() -> &'static str {
+                    stringify!(#primary_key)
+                }
+
+                #[inline]
+                fn get_fields() -> &'static [&'static str] {
+                   ["TO", "DO"]
+                }
+
+    //            fn get_query_params -> Arc<[Box<dyn ToSqlItem>]> {
+    //                unimplemented!()
+    //            }
             }
-
-            #[inline]
-            fn get_primary_key() -> &'static str {
-                stringify!(#primary_key)
-            }
-
-            #[inline]
-            fn get_fields() -> &'static [&'static str] {
-               ["TO", "DO"]
-            }
-
-//            fn get_query_params -> Arc<[Box<dyn ToSqlItem>]> {
-//                unimplemented!()
-//            }
-        }
-    );
+        );
     tokens.into()
 }
 
@@ -147,11 +146,11 @@ fn get_table_name_from_attributes(attributes: Vec<Attribute>) -> Option<String> 
     for attribute in attributes {
         match attribute.path.segments.first() {
             Some(segment) => {
-                if ! segment.ident.to_string().eq("profugus") {
-                    continue
+                if !segment.ident.to_string().eq("profugus") {
+                    continue;
                 }
             }
-            None => continue
+            None => continue,
         }
         'table_name_search: for item in attribute.tokens {
             match item {
@@ -159,22 +158,21 @@ fn get_table_name_from_attributes(attributes: Vec<Attribute>) -> Option<String> 
                     for token in group.stream() {
                         match token {
                             Ident2(ident) => {
-                                if ! ident.to_string().eq("table") {
-                                    break 'table_name_search;                                }
+                                if !ident.to_string().eq("table") {
+                                    break 'table_name_search;
+                                }
                             }
                             Punct(punct) => {
                                 if punct.as_char() != '=' {
                                     break 'table_name_search;
                                 }
                             }
-                            Literal(literal) => {
-                                return Some(literal.to_string().replace("\"", ""))
-                            }
-                            _ => break 'table_name_search
+                            Literal(literal) => return Some(literal.to_string().replace("\"", "")),
+                            _ => break 'table_name_search,
                         }
                     }
-                },
-                _ => break
+                }
+                _ => break,
             }
         }
     }
