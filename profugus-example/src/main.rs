@@ -1,21 +1,23 @@
 #![feature(custom_attribute)]
+use profugus::PGConnection;
 use profugus::*;
-use tokio;
 
-#[tokio::main]
-async fn main() -> Result<(), Error> {
-    let conn = PGConnection::new("postgresql://localhost/dellstore2?user=tg").await?;
-    let number_of_products: Vec<Count> = conn
-        .query_multiple("select count(*) as count from products", &[])
-        .await?;
-    //dbg!(number_of_products);
-    Ok(())
+#[derive(FromSql, ToSql, Eq, PartialEq, Debug)]
+struct Product {
+    #[profugus(primary_key)]
+    prod_id: i32,
+    title: String,
 }
 
-#[derive(ToSql, FromSql, Debug)]
-#[profugus(table = "crazycount")]
-struct Count {
-    id: i64,
-    #[profugus(primary_key)]
-    count: i64,
+#[tokio::main]
+async fn main() {
+    let conn = PGConnection::new("postgresql://localhost/dellstore2?user=tg")
+        .await
+        .unwrap();
+    let new_product = Product {
+        prod_id: 0,
+        title: String::from("Sql insert lesson"),
+    };
+    let product = conn.create(new_product).await.unwrap();
+    dbg!(product);
 }

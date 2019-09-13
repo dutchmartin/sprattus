@@ -1,6 +1,7 @@
 use std::sync::Arc;
+use tokio::prelude::Stream;
 use tokio_postgres::types::ToSql as ToSqlItem;
-use tokio_postgres::Row;
+use tokio_postgres::{Error, Row, Statement};
 
 pub trait FromSql {
     ///
@@ -23,13 +24,13 @@ pub trait ToSql {
     /// The fields that contain the data of the table.
     /// The primary key is excluded from this list.
     ///
-    fn get_fields() -> &'static [&'static str];
+    fn get_fields() -> &'static str;
 
     ///
     /// The method that implements converting the fields
     /// into a array of items that implement the ToSql trait of rust_postgres.
     ///
-    fn get_query_params(self) -> Arc<[Box<dyn ToSqlItem>]>;
+    fn get_query_params(&self) -> Vec<&dyn ToSqlItem>;
 
     ///
     /// Returns the formatted prepared statement list.
