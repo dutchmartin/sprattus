@@ -303,12 +303,16 @@ impl PGConnection {
         let insert = self.client.lock().prepare(sql.as_str());
         let insert = insert.await?;
 
-        let params: Vec<&dyn ToSqlItem> = items.iter().map(|item|item.get_query_params()).flatten().collect();
+        let params: Vec<&dyn ToSqlItem> = items
+            .iter()
+            .map(|item| item.get_query_params())
+            .flatten()
+            .collect();
         let result = { self.client.lock().query(&insert, &params) };
         Ok(result
-               .map_ok(|row| T::from_row(&row))
-               .try_collect::<Vec<T>>()
-               .await?)
+            .map_ok(|row| T::from_row(&row))
+            .try_collect::<Vec<T>>()
+            .await?)
     }
 
     ///
@@ -389,19 +393,17 @@ impl PGConnection {
 fn create_prepared_arguments_list(item_length: usize, no_of_items: usize) -> String {
     let mut arguments_list: String = String::new();
     let argument_num = item_length * no_of_items;
-    let mut first : bool = true;
+    let mut first: bool = true;
 
     for i in 1..argument_num + 1 {
-        if (i -1) % item_length == 0 {
+        if (i - 1) % item_length == 0 {
             if first {
                 first = false;
-            }
-            else{
+            } else {
                 arguments_list.push_str("),");
             }
             arguments_list.push('(');
-        }
-        else {
+        } else {
             arguments_list.push(',');
         }
         arguments_list.push('$');

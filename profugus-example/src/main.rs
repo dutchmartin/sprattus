@@ -14,7 +14,7 @@ async fn main() {
     let conn = PGConnection::new("postgresql://localhost/dellstore2?user=tg")
         .await
         .unwrap();
-    let new_products = vec!(
+    let new_products = vec![
         Product {
             prod_id: 0,
             title: String::from("Sql insert lesson"),
@@ -26,7 +26,8 @@ async fn main() {
         Product {
             prod_id: 0,
             title: String::from("bla"),
-        });
+        },
+    ];
 
     let product: Vec<Product> = conn.create_multiple(new_products).await.unwrap();
     dbg!(product);
