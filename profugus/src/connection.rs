@@ -9,6 +9,7 @@ use tokio_postgres::*;
 
 use crate::*;
 
+#[derive(Clone)]
 pub struct PGConnection {
     client: Arc<Mutex<Client>>,
 }
@@ -297,9 +298,8 @@ impl PGConnection {
             "INSERT INTO {table_name} ({fields}) values {prepared_values} RETURNING *",
             table_name = T::get_table_name(),
             fields = T::get_fields(),
-            prepared_values = create_prepared_arguments_list(T::get_argument_count(), items.len()),
+            prepared_values = generate_prepared_arguments_list(T::get_argument_count(), items.len()),
         );
-        dbg!(&sql);
         let insert = self.client.lock().prepare(sql.as_str());
         let insert = insert.await?;
 
@@ -342,11 +342,25 @@ impl PGConnection {
     ///     conn.delete(product).await.unwrap();
     /// }
     /// ```
-    pub async fn delete<T>(item: T) -> Result<(), Error>
+    pub async fn delete<T>(self, item: T) -> Result<T, Error>
     where
-        T: ToSql + Sized,
+        T: ToSql + FromSql + Sized,
     {
-        unimplemented!();
+        let sql = format!(
+            "DELETE FROM {table_name} WHERE {primary_key} IN ($1) RETURNING *",
+            table_name = T::get_table_name(),
+            primary_key = T::get_primary_key()
+        );
+        let insert = self.client.lock().prepare(sql.as_str());
+        let insert = insert.await?;
+
+        let result = { self.client.lock().query(&insert, &[item.get_primary_key_value().as_ref()]) };
+        Ok(result
+            .map_ok(|row| T::from_row(&row))
+            .try_collect::<Vec<T>>()
+            .await?
+            .pop()
+            .expect("at least it should return a row"))
     }
 
     ///
@@ -390,7 +404,7 @@ impl PGConnection {
 ///
 /// Generates a string of prepared statement placeholder arguments.
 ///
-fn create_prepared_arguments_list(item_length: usize, no_of_items: usize) -> String {
+fn generate_prepared_arguments_list(item_length: usize, no_of_items: usize) -> String {
     let mut arguments_list: String = String::new();
     let argument_num = item_length * no_of_items;
     let mut first: bool = true;
@@ -411,4 +425,18 @@ fn create_prepared_arguments_list(item_length: usize, no_of_items: usize) -> Str
     }
     arguments_list.push(')');
     arguments_list
+}
+
+fn generate_single_prepared_arguments_list(no_of_items: usize ) {
+    let mut arguments_list: String = String::new();
+    arguments_list.push('(');
+    for i in 1..no_of_items+1 {
+        arguments_list.push('$');
+        arguments_list.push_str(&*i.to_string());
+        match i == no_of_items {
+            true => {}
+            false =>  arguments_list.push(',')
+        }
+    }
+    arguments_list.push(')');
 }

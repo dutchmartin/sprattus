@@ -20,6 +20,8 @@ pub trait ToSql {
     ///
     fn get_primary_key() -> &'static str;
 
+    fn get_primary_key_value(self) -> Box<dyn ToSqlItem>;
+
     ///
     /// The fields that contain the data of the table.
     /// The primary key is excluded from this list.

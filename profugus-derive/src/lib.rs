@@ -146,6 +146,10 @@ fn build_to_sql_impl(
                 stringify!(#primary_key)
             }
 
+            fn get_primary_key_value(self) -> Box<dyn ToSqlItem> {
+                Box::new(self.#primary_key)
+            }
+
             #[inline]
             fn get_fields() -> &'static str {
                #field_list_string
