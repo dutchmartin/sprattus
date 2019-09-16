@@ -247,7 +247,6 @@ impl PGConnection {
             fields = T::get_fields(),
             prepared_values = T::get_prepared_arguments_list(),
         );
-        dbg!(&sql);
         let insert = self.client.lock().prepare(sql.as_str());
         let insert = insert.await?;
 
@@ -283,8 +282,7 @@ impl PGConnection {
     ///         Product {prod_id: 0, title: String::from("Rust macro lesson")},
     ///         Product {prod_id: 0, title: String::from("Postgres data types lesson")};
     ///     );
-    ///     let id = conn.create(new_product).await.unwrap().get_id();
-    ///     let products = conn.query_multiple("SELECT prod_id, title from Products where prod_id = $1", &[id]);
+    ///     let products = conn.create(new_product).await.unwrap();
     ///
     ///     assert_eq!(new_products, products);
     ///
@@ -293,9 +291,24 @@ impl PGConnection {
     /// ```
     pub async fn create_multiple<T>(self, items: Vec<T>) -> Result<Vec<T>, Error>
     where
-        T: Sized + ToSql,
+        T: Sized + ToSql + FromSql,
     {
-        unimplemented!();
+        let sql = format!(
+            "INSERT INTO {table_name} ({fields}) values ({prepared_values}) RETURNING *",
+            table_name = T::get_table_name(),
+            fields = T::get_fields(),
+            prepared_values = create_prepared_arguments_list(T::get_argument_count(), items.len()),
+        );
+        dbg!(sql);
+        let insert = self.client.lock().prepare(sql.as_str());
+        let insert = insert.await?;
+
+        let params = items.iter().map(|item|item.get_query_params()).flatten().collect();
+        let result = { self.client.lock().query(&insert, params) };
+        Ok(result
+               .map_ok(|row| T::from_row(&row))
+               .try_collect::<Vec<T>>()
+               .await?)
     }
 
     ///
@@ -369,4 +382,31 @@ impl PGConnection {
     {
         unimplemented!();
     }
+}
+///
+/// Generates a string of prepared statement placeholder arguments.
+///
+fn create_prepared_arguments_list(item_length: usize, no_of_items: usize) -> String {
+    let mut arguments_list: String = String::new();
+    let argument_num = item_length * no_of_items;
+    let mut first : bool = true;
+
+    for i in 1..argument_num + 1 {
+        if (i -1) % item_length == 0 {
+            if first {
+                first = false;
+            }
+            else{
+                arguments_list.push_str("),");
+            }
+            arguments_list.push('(');
+        }
+        else {
+            arguments_list.push(',');
+        }
+        arguments_list.push('$');
+        arguments_list.push_str(&*i.to_string());
+    }
+    arguments_list.push(')');
+    arguments_list
 }

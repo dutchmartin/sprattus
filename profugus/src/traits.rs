@@ -37,4 +37,6 @@ pub trait ToSql {
     /// Example: "$1, $2"
     ///
     fn get_prepared_arguments_list() -> &'static str;
+
+    fn get_argument_count() -> usize;
 }

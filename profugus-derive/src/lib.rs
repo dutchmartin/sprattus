@@ -131,6 +131,7 @@ fn build_to_sql_impl(
 
     let prepared_arguments_list = generate_argument_list(field_list.len());
     let field_list_string = generate_field_list(&field_list);
+    let field_list_len = field_list.len();
     let tokens = quote!(
     use std::sync::Arc;
         impl ToSql for #name {
@@ -158,6 +159,11 @@ fn build_to_sql_impl(
             #[inline]
             fn get_prepared_arguments_list() -> &'static str {
                 #prepared_arguments_list
+            }
+
+            #[inline]
+            fn get_argument_count() -> usize {
+                #field_list_len
             }
         }
     );
