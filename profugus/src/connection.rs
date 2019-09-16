@@ -239,7 +239,7 @@ impl PGConnection {
     /// ```
     pub async fn create<T>(self, item: T) -> Result<T, Error>
     where
-        T: Sized + ToSql + FromSql + Unpin,
+        T: Sized + ToSql + FromSql,
     {
         let sql = format!(
             "INSERT INTO {table_name} ({fields}) values ({prepared_values}) RETURNING *",
