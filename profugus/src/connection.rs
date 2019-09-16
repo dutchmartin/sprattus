@@ -294,17 +294,17 @@ impl PGConnection {
         T: Sized + ToSql + FromSql,
     {
         let sql = format!(
-            "INSERT INTO {table_name} ({fields}) values ({prepared_values}) RETURNING *",
+            "INSERT INTO {table_name} ({fields}) values {prepared_values} RETURNING *",
             table_name = T::get_table_name(),
             fields = T::get_fields(),
             prepared_values = create_prepared_arguments_list(T::get_argument_count(), items.len()),
         );
-        dbg!(sql);
+        dbg!(&sql);
         let insert = self.client.lock().prepare(sql.as_str());
         let insert = insert.await?;
 
-        let params = items.iter().map(|item|item.get_query_params()).flatten().collect();
-        let result = { self.client.lock().query(&insert, params) };
+        let params: Vec<&dyn ToSqlItem> = items.iter().map(|item|item.get_query_params()).flatten().collect();
+        let result = { self.client.lock().query(&insert, &params) };
         Ok(result
                .map_ok(|row| T::from_row(&row))
                .try_collect::<Vec<T>>()
