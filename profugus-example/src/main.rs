@@ -32,7 +32,6 @@ async fn main() {
     let mut product: Vec<Product> = conn.clone().create_multiple(new_products).await.unwrap();
     dbg!(&product);
 
-    let x: Product = product.pop().unwrap();
-    let deleted = conn.delete(x).await.unwrap();
+    let deleted = conn.delete_multiple(product).await.unwrap();
     dbg!(deleted);
 }

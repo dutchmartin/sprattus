@@ -8,6 +8,7 @@ use tokio;
 use tokio_postgres::*;
 
 use crate::*;
+use std::ops::Deref;
 
 #[derive(Clone)]
 pub struct PGConnection {
@@ -394,11 +395,30 @@ impl PGConnection {
     ///     conn.delete(products).await.unwrap();
     /// }
     /// ```
-    pub async fn delete_multiple<T>(item: Vec<T>) -> Result<(), Error>
+    pub async fn delete_multiple<T>(self, items: Vec<T>) -> Result<Vec<T>, Error>
     where
-        T: ToSql + Sized,
+        T: ToSql + FromSql,
     {
-        unimplemented!();
+        let sql = format!(
+            "DELETE FROM {table_name} WHERE {primary_key} IN ({argument_list}) RETURNING *",
+            table_name = T::get_table_name(),
+            primary_key = T::get_primary_key(),
+            argument_list = generate_single_prepared_arguments_list(items.len())
+        );
+        let insert = self.client.lock().prepare(sql.as_str());
+        let insert = insert.await?;
+        // TODO: make this work:
+        let primary_keys: Vec<Box<&dyn ToSqlItem>> = items
+            .iter()
+            .map( |item| item.get_primary_key_value())
+            .collect();
+        let result = {
+            self.client.lock().query(&insert, &[])
+        };
+        Ok(result
+            .map_ok(|row| T::from_row(&row))
+            .try_collect::<Vec<T>>()
+            .await?)
     }
 }
 ///
@@ -427,7 +447,7 @@ fn generate_prepared_arguments_list(item_length: usize, no_of_items: usize) -> S
     arguments_list
 }
 
-fn generate_single_prepared_arguments_list(no_of_items: usize ) {
+fn generate_single_prepared_arguments_list(no_of_items: usize ) -> String {
     let mut arguments_list: String = String::new();
     arguments_list.push('(');
     for i in 1..no_of_items+1 {
@@ -439,4 +459,5 @@ fn generate_single_prepared_arguments_list(no_of_items: usize ) {
         }
     }
     arguments_list.push(')');
+    arguments_list
 }
