@@ -164,13 +164,16 @@ impl PGConnection {
     {
         // TODO: change this to a const fn, see https://github.com/rust-lang/rust/issues/57563
         let sql_template = if T::get_prepared_arguments_list() == "$1" {
-            "UPDATE {table_name} {fields} = {prepared_values} RETURNING *"
+            "UPDATE {table_name} SET {fields} = {prepared_values} RETURNING *"
         } else {
-            "UPDATE {table_name} ({fields}) = ({prepared_values}) RETURNING *"
+            "UPDATE {table_name} SET ({fields}) = ({prepared_values}) RETURNING *"
         };
         let mut sql_vars = HashMap::with_capacity(6);
         sql_vars.insert(String::from("table_name"), T::get_table_name());
-        sql_vars.insert(String::from("prepared_values"), T::get_prepared_arguments_list());
+        sql_vars.insert(
+            String::from("prepared_values"),
+            T::get_prepared_arguments_list(),
+        );
         sql_vars.insert(String::from("fields"), T::get_fields());
 
         let sql = strfmt(sql_template, &sql_vars).unwrap();
@@ -178,11 +181,7 @@ impl PGConnection {
         let insert = self.client.lock().prepare(&sql);
         let insert = insert.await?;
 
-        let result = {
-            self.client
-                .lock()
-                .query(&insert, &[&item.get_primary_key_value()])
-        };
+        let result = { self.client.lock().query(&insert, &item.get_query_params()) };
         Ok(result
             .map_ok(|row| T::from_row(&row))
             .try_collect::<Vec<T>>()

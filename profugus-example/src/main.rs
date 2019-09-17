@@ -11,27 +11,31 @@ struct Product {
 
 #[tokio::main]
 async fn main() {
-    //    let conn = PGConnection::new("postgresql://localhost/dellstore2?user=tg")
-    //        .await
-    //        .unwrap();
-    //    let new_products = vec![
-    //        Product {
-    //            prod_id: 0,
-    //            title: String::from("Sql insert lesson"),
-    //        },
-    //        Product {
-    //            prod_id: 0,
-    //            title: String::from("something"),
-    //        },
-    //        Product {
-    //            prod_id: 0,
-    //            title: String::from("bla"),
-    //        },
-    //    ];
-    //
-    //    let mut product: Vec<Product> = conn.clone().create_multiple(new_products).await.unwrap();
-    //    dbg!(&product);
-    //
+    let conn = PGConnection::new("postgresql://localhost/dellstore2?user=tg")
+        .await
+        .unwrap();
+    let products = vec![
+        Product {
+            prod_id: 0,
+            title: String::from("Sql insert lesson"),
+        },
+        Product {
+            prod_id: 0,
+            title: String::from("something"),
+        },
+        Product {
+            prod_id: 0,
+            title: String::from("bla"),
+        },
+    ];
+    let product = Product {
+        prod_id: 69,
+        title: String::from("bla"),
+    };
+
+    let product: Product = conn.update(product).await.unwrap();
+    dbg!(&product);
+
     //    let deleted = conn.delete_multiple(product).await.unwrap();
     //    dbg!(deleted);
 }
