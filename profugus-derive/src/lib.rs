@@ -4,7 +4,8 @@ use proc_macro2::TokenTree::{Group, Ident as Ident2, Literal, Punct};
 use proc_macro2::{Ident, TokenTree};
 use quote::quote;
 use syn::export::TokenStream2;
-use syn::{parse_macro_input, Attribute, Data::Struct, DeriveInput, Field};
+use syn::Type::Path;
+use syn::{parse_macro_input, Attribute, Data::Struct, DeriveInput, Field, Type};
 
 #[proc_macro_derive(FromSql)]
 pub fn from_sql(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
@@ -88,6 +89,7 @@ pub fn to_sql_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream 
                         return build_to_sql_impl(
                             name,
                             get_field_name(field),
+                            get_ident_name_from_path(&field.ty),
                             table_name,
                             &mut fields,
                         );
@@ -97,8 +99,15 @@ pub fn to_sql_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream 
             // Check if the field contains a field with `id` in the name.
             for field in &data.fields {
                 let field_name = get_field_name(field);
+                let field_type = get_ident_name_from_path(&field.ty);
                 if field_name.to_string().contains("id") {
-                    return build_to_sql_impl(name, field_name, table_name, &mut fields);
+                    return build_to_sql_impl(
+                        name,
+                        field_name,
+                        field_type,
+                        table_name,
+                        &mut fields,
+                    );
                 }
             }
 
@@ -123,6 +132,7 @@ fn get_field_name(field: &Field) -> &Ident {
 fn build_to_sql_impl(
     name: &Ident,
     primary_key: &Ident,
+    primary_key_type: &Ident,
     table_name: String,
     field_list: &mut Vec<TokenStream2>,
 ) -> proc_macro::TokenStream {
@@ -133,7 +143,6 @@ fn build_to_sql_impl(
     let field_list_string = generate_field_list(&field_list);
     let field_list_len = field_list.len();
     let tokens = quote!(
-    use std::sync::Arc;
         impl ToSql for #name {
 
             #[inline]
@@ -146,8 +155,11 @@ fn build_to_sql_impl(
                 stringify!(#primary_key)
             }
 
-            fn get_primary_key_value(self) -> Box<dyn ToSqlItem> {
-                Box::new(self.#primary_key)
+            type PK = #primary_key_type;
+
+            #[inline]
+            fn get_primary_key_value(self) -> #primary_key_type {
+                self.#primary_key
             }
 
             #[inline]
@@ -231,4 +243,11 @@ fn generate_field_list(field_list: &Vec<TokenStream2>) -> String {
         }
     }
     field_list_str
+}
+
+fn get_ident_name_from_path(path: &Type) -> &Ident {
+    match path {
+        Path(path) => path.path.get_ident().unwrap(),
+        _ => panic!("not found a path"),
+    }
 }

@@ -1,3 +1,4 @@
+#![feature(associated_type_bounds)]
 /// Profugus postgres orm
 mod connection;
 mod traits;

@@ -1,7 +1,5 @@
-use std::sync::Arc;
-use tokio::prelude::Stream;
 use tokio_postgres::types::ToSql as ToSqlItem;
-use tokio_postgres::{Error, Row, Statement};
+use tokio_postgres::Row;
 
 pub trait FromSql {
     ///
@@ -20,7 +18,11 @@ pub trait ToSql {
     ///
     fn get_primary_key() -> &'static str;
 
-    fn get_primary_key_value(self) -> Box<dyn ToSqlItem>;
+    type PK;
+
+    fn get_primary_key_value(self) -> Self::PK
+    where
+        Self::PK: ToSqlItem + Sized;
 
     ///
     /// The fields that contain the data of the table.

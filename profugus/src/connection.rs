@@ -8,8 +8,6 @@ use tokio;
 use tokio_postgres::*;
 
 use crate::*;
-use std::ops::Deref;
-
 #[derive(Clone)]
 pub struct PGConnection {
     client: Arc<Mutex<Client>>,
@@ -156,11 +154,30 @@ impl PGConnection {
     ///     assert_eq!(product, Product{ prod_id: 50, title: String::from("ACADEMY BAKED")});
     /// }
     /// ```
-    pub async fn update<T>(self, item: T) -> Result<(), Error>
+    pub async fn update<T>(self, item: T) -> Result<T, Error>
     where
         T: Sized + ToSql,
     {
-        unimplemented!();
+        let sql = format!(
+            "UPDATE {table_name} SET X = $1, $2 WHERE {primary_key} = (${count}) RETURNING *",
+            table_name = T::get_table_name(),
+            primary_key = T::get_primary_key(),
+            count = T::get_argument_count()
+        );
+        let insert = self.client.lock().prepare(sql.as_str());
+        let insert = insert.await?;
+
+        let result = {
+            self.client
+                .lock()
+                .query(&insert, &[&item.get_primary_key_value()])
+        };
+        Ok(result
+            .map_ok(|row| T::from_row(&row))
+            .try_collect::<Vec<T>>()
+            .await?
+            .pop()
+            .expect("at least it should return a row"))
     }
 
     ///
@@ -299,7 +316,8 @@ impl PGConnection {
             "INSERT INTO {table_name} ({fields}) values {prepared_values} RETURNING *",
             table_name = T::get_table_name(),
             fields = T::get_fields(),
-            prepared_values = generate_prepared_arguments_list(T::get_argument_count(), items.len()),
+            prepared_values =
+                generate_prepared_arguments_list(T::get_argument_count(), items.len()),
         );
         let insert = self.client.lock().prepare(sql.as_str());
         let insert = insert.await?;
@@ -343,9 +361,9 @@ impl PGConnection {
     ///     conn.delete(product).await.unwrap();
     /// }
     /// ```
-    pub async fn delete<T>(self, item: T) -> Result<T, Error>
+    pub async fn delete<T: traits::FromSql + traits::ToSql>(self, item: T) -> Result<T, Error>
     where
-        T: ToSql + FromSql + Sized,
+        <T as traits::ToSql>::PK: tokio_postgres::types::ToSql,
     {
         let sql = format!(
             "DELETE FROM {table_name} WHERE {primary_key} IN ($1) RETURNING *",
@@ -355,7 +373,11 @@ impl PGConnection {
         let insert = self.client.lock().prepare(sql.as_str());
         let insert = insert.await?;
 
-        let result = { self.client.lock().query(&insert, &[item.get_primary_key_value().as_ref()]) };
+        let result = {
+            self.client
+                .lock()
+                .query(&insert, &[&item.get_primary_key_value()])
+        };
         Ok(result
             .map_ok(|row| T::from_row(&row))
             .try_collect::<Vec<T>>()
@@ -395,30 +417,32 @@ impl PGConnection {
     ///     conn.delete(products).await.unwrap();
     /// }
     /// ```
-    pub async fn delete_multiple<T>(self, items: Vec<T>) -> Result<Vec<T>, Error>
+    pub async fn delete_multiple<T: traits::FromSql + traits::ToSql>(
+        self,
+        items: Vec<T>,
+    ) -> Result<Vec<T>, Error>
     where
-        T: ToSql + FromSql,
+        <T as traits::ToSql>::PK: tokio_postgres::types::ToSql + Sized,
     {
-        let sql = format!(
-            "DELETE FROM {table_name} WHERE {primary_key} IN ({argument_list}) RETURNING *",
-            table_name = T::get_table_name(),
-            primary_key = T::get_primary_key(),
-            argument_list = generate_single_prepared_arguments_list(items.len())
-        );
-        let insert = self.client.lock().prepare(sql.as_str());
-        let insert = insert.await?;
-        // TODO: make this work:
-        let primary_keys: Vec<Box<&dyn ToSqlItem>> = items
-            .iter()
-            .map( |item| item.get_primary_key_value())
-            .collect();
-        let result = {
-            self.client.lock().query(&insert, &[])
-        };
-        Ok(result
-            .map_ok(|row| T::from_row(&row))
-            .try_collect::<Vec<T>>()
-            .await?)
+        //        let sql = format!(
+        //            "DELETE FROM {table_name} WHERE {primary_key} IN ({argument_list}) RETURNING *",
+        //            table_name = T::get_table_name(),
+        //            primary_key = T::get_primary_key(),
+        //            argument_list = generate_single_prepared_arguments_list(items.len())
+        //        );
+        //        let insert = self.client.lock().prepare(sql.as_str());
+        //        let insert = insert.await?;
+        //        // TODO: make this work:
+        //        let params: Vec<_> = items
+        //            .iter()
+        //            .map(|item| &item.get_primary_key_value())
+        //            .collect();
+        //        let result = { self.client.lock().query(&insert, &params[..])};
+        //        Ok(result
+        //            .map_ok(|row| T::from_row(&row))
+        //            .try_collect::<Vec<T>>()
+        //            .await?)
+        unimplemented!()
     }
 }
 ///
@@ -447,15 +471,15 @@ fn generate_prepared_arguments_list(item_length: usize, no_of_items: usize) -> S
     arguments_list
 }
 
-fn generate_single_prepared_arguments_list(no_of_items: usize ) -> String {
+fn generate_single_prepared_arguments_list(no_of_items: usize) -> String {
     let mut arguments_list: String = String::new();
     arguments_list.push('(');
-    for i in 1..no_of_items+1 {
+    for i in 1..no_of_items + 1 {
         arguments_list.push('$');
         arguments_list.push_str(&*i.to_string());
         match i == no_of_items {
             true => {}
-            false =>  arguments_list.push(',')
+            false => arguments_list.push(','),
         }
     }
     arguments_list.push(')');
