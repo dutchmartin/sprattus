@@ -3,11 +3,15 @@ use futures_util::future::FutureExt;
 use futures_util::try_future::TryFutureExt;
 use futures_util::StreamExt;
 use parking_lot::*;
+use std::collections::HashMap;
 use std::sync::Arc;
+use strfmt::strfmt;
 use tokio;
 use tokio_postgres::*;
 
 use crate::*;
+use std::hint::unreachable_unchecked;
+
 #[derive(Clone)]
 pub struct PGConnection {
     client: Arc<Mutex<Client>>,
@@ -154,17 +158,24 @@ impl PGConnection {
     ///     assert_eq!(product, Product{ prod_id: 50, title: String::from("ACADEMY BAKED")});
     /// }
     /// ```
-    pub async fn update<T>(self, item: T) -> Result<T, Error>
+    pub async fn update<T: traits::FromSql + traits::ToSql>(self, item: T) -> Result<T, Error>
     where
-        T: Sized + ToSql,
+        <T as traits::ToSql>::PK: tokio_postgres::types::ToSql,
     {
-        let sql = format!(
-            "UPDATE {table_name} SET X = $1, $2 WHERE {primary_key} = (${count}) RETURNING *",
-            table_name = T::get_table_name(),
-            primary_key = T::get_primary_key(),
-            count = T::get_argument_count()
-        );
-        let insert = self.client.lock().prepare(sql.as_str());
+        // TODO: change this to a const fn, see https://github.com/rust-lang/rust/issues/57563
+        let sql_template = if T::get_prepared_arguments_list() == "$1" {
+            "UPDATE {table_name} {fields} = {prepared_values} RETURNING *"
+        } else {
+            "UPDATE {table_name} ({fields}) = ({prepared_values}) RETURNING *"
+        };
+        let mut sql_vars = HashMap::with_capacity(6);
+        sql_vars.insert(String::from("table_name"), T::get_table_name());
+        sql_vars.insert(String::from("prepared_values"), T::get_prepared_arguments_list());
+        sql_vars.insert(String::from("fields"), T::get_fields());
+
+        let sql = strfmt(sql_template, &sql_vars).unwrap();
+
+        let insert = self.client.lock().prepare(&sql);
         let insert = insert.await?;
 
         let result = {
@@ -178,6 +189,7 @@ impl PGConnection {
             .await?
             .pop()
             .expect("at least it should return a row"))
+        //unimplemented!()
     }
 
     ///

@@ -10,3 +10,7 @@ edition = "2018"
 profugus = {path = "../profugus"}
 tokio = "0.2.0-alpha.4"
 postgres-derive = "0.3.3"
+#async-trait = "0.1.13"
+#tokio-postgres = { git= "https://github.com/sfackler/rust-postgres.git", branch = "std-futures" }
+#futures-preview = { version = "=0.3.0-alpha.18", features = ["async-await", "nightly"]  }
+#futures-util-preview = { version = "0.3.0-alpha.18", features = ["async-await", "nightly"] }
