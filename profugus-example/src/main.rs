@@ -29,8 +29,8 @@ async fn main() {
         },
     ];
     let product = Product {
-        prod_id: 69,
-        title: String::from("bla"),
+        prod_id: 2,
+        title: String::from("boom-box"),
     };
 
     let product: Product = conn.update(product).await.unwrap();

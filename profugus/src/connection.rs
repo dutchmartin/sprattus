@@ -1,7 +1,6 @@
 use futures::TryStreamExt;
 use futures_util::future::FutureExt;
 use futures_util::try_future::TryFutureExt;
-use futures_util::StreamExt;
 use parking_lot::*;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -10,7 +9,6 @@ use tokio;
 use tokio_postgres::*;
 
 use crate::*;
-use std::hint::unreachable_unchecked;
 
 #[derive(Clone)]
 pub struct PGConnection {
@@ -164,31 +162,32 @@ impl PGConnection {
     {
         // TODO: change this to a const fn, see https://github.com/rust-lang/rust/issues/57563
         let sql_template = if T::get_prepared_arguments_list() == "$1" {
-            "UPDATE {table_name} SET {fields} = {prepared_values} RETURNING *"
+            "UPDATE {table_name} SET {fields} = {prepared_values} WHERE {primary_key} = ${key_arg_num} RETURNING *"
         } else {
-            "UPDATE {table_name} SET ({fields}) = ({prepared_values}) RETURNING *"
+            "UPDATE {table_name} SET ({fields}) = ({prepared_values}) WHERE {primary_key} = ${key_arg_num} RETURNING *"
         };
-        let mut sql_vars = HashMap::with_capacity(6);
+        let mut sql_vars = HashMap::with_capacity(12);
         sql_vars.insert(String::from("table_name"), T::get_table_name());
+        sql_vars.insert(String::from("fields"), T::get_fields());
+        sql_vars.insert(String::from("primary_key"), T::get_primary_key());
+        let primary_key_arg_number = (T::get_argument_count() + 1).to_string();
+        sql_vars.insert(String::from("key_arg_num"), primary_key_arg_number.as_ref());
         sql_vars.insert(
             String::from("prepared_values"),
             T::get_prepared_arguments_list(),
         );
-        sql_vars.insert(String::from("fields"), T::get_fields());
-
         let sql = strfmt(sql_template, &sql_vars).unwrap();
 
         let insert = self.client.lock().prepare(&sql);
         let insert = insert.await?;
-
-        let result = { self.client.lock().query(&insert, &item.get_query_params()) };
+        //TODO: make this compile without livetime issues.
+        let result = { self.client.lock().query(&insert, &[&item.get_query_params().iter().a&[&item.get_primary_key_value()])]) };
         Ok(result
             .map_ok(|row| T::from_row(&row))
             .try_collect::<Vec<T>>()
             .await?
             .pop()
             .expect("at least it should return a row"))
-        //unimplemented!()
     }
 
     ///
@@ -232,11 +231,46 @@ impl PGConnection {
     ///     assert_eq!(product_list, old_products);
     /// }
     /// ```
-    pub async fn update_multiple<T>(self, items: Vec<T>) -> Result<(), Error>
+    pub async fn update_multiple<T>(self, items: Vec<T>) -> Result<Vec<T>, Error>
     where
         T: Sized + ToSql,
     {
-        unimplemented!();
+//        // TODO: change this to a const fn, see https://github.com/rust-lang/rust/issues/57563
+//        let sql_template = if T::get_prepared_arguments_list() == "$1" {
+//            "UPDATE {table_name} AS P SET {fields} = temp_table.{inner_fields} FROM \
+//             (VALUES {prepared_placeholders}) as temp_table({all_fields}) \
+//             WHERE P.{primary_key} = temp_table.{primary_key} \
+//             RETURNING *"
+//        } else {
+//            "UPDATE {table_name} AS P SET ({fields}) = (temp_table.{inner_fields}) FROM \
+//             (VALUES {prepared_placeholders}) as temp_table({all_fields}) \
+//             WHERE P.{primary_key} = temp_table.{primary_key} \
+//             RETURNING *"
+//        };
+//        let placeholders =
+//            generate_prepared_arguments_list(T::get_argument_count() + 1, items.len());
+//        let inner_fields = T::get_fields().replace(",", ",temp_table");
+//        let mut sql_vars = HashMap::with_capacity(12);
+//        sql_vars.insert(String::from("table_name"), T::get_table_name());
+//        sql_vars.insert(String::from("inner_fields"), inner_fields.as_str());
+//        sql_vars.insert(String::from("fields"), T::get_fields());
+//        sql_vars.insert(String::from("primary_key"), T::get_primary_key());
+//        sql_vars.insert(String::from("all_fields"), T::get_all_fields());
+//        sql_vars.insert(String::from("prepared_placeholders"), placeholders.as_str());
+//        let sql = strfmt(sql_template, &sql_vars).unwrap();
+//        dbg!(&sql);
+          // TODO: This does not work, since postgres can not infer the types of the items being sent
+//        let insert = self.client.lock().prepare(&sql);
+//        let insert = insert.await?;
+        //
+        //        let result = { self.client.lock().query(&insert, &item.get_query_params()) };
+        //        Ok(result
+        //            .map_ok(|row| T::from_row(&row))
+        //            .try_collect::<Vec<T>>()
+        //            .await?
+        //            .pop()
+        //            .expect("at least it should return a row"))
+        unimplemented!()
     }
 
     ///

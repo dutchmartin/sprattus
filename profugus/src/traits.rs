@@ -30,6 +30,11 @@ pub trait ToSql {
     ///
     fn get_fields() -> &'static str;
 
+    /// Returns a comma separated list of all fields.
+    fn get_all_fields() -> &'static str;
+
+    fn get_values_of_all_fields(&self) -> Vec<&dyn ToSqlItem>;
+
     ///
     /// The method that implements converting the fields
     /// into a array of items that implement the ToSql trait of rust_postgres.

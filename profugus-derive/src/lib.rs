@@ -141,6 +141,7 @@ fn build_to_sql_impl(
 
     let prepared_arguments_list = generate_argument_list(field_list.len());
     let field_list_string = generate_field_list(&field_list);
+    let all_field_list_string = primary_key.to_string() + "," + &field_list_string;
     let field_list_len = field_list.len();
     let tokens = quote!(
         impl ToSql for #name {
@@ -161,10 +162,19 @@ fn build_to_sql_impl(
             fn get_primary_key_value(self) -> #primary_key_type {
                 self.#primary_key
             }
+            #[inline]
+            fn get_all_fields() -> &'static str {
+                #all_field_list_string
+            }
 
             #[inline]
             fn get_fields() -> &'static str {
                #field_list_string
+            }
+
+            #[inline]
+            fn get_values_of_all_fields(&self) -> Vec<&dyn ToSqlItem> {
+                vec![&self.#primary_key,#(&self.#field_list),*]
             }
 
             #[inline]
