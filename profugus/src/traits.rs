@@ -47,5 +47,7 @@ pub trait ToSql {
     ///
     fn get_prepared_arguments_list() -> &'static str;
 
+    fn get_prepared_arguments_list_with_types() -> &'static str;
+
     fn get_argument_count() -> usize;
 }

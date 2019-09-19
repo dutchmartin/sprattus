@@ -16,16 +16,16 @@ async fn main() {
         .unwrap();
     let products = vec![
         Product {
-            prod_id: 0,
+            prod_id: 1,
             title: String::from("Sql insert lesson"),
         },
         Product {
-            prod_id: 0,
-            title: String::from("something"),
+            prod_id: 2,
+            title: String::from("my little pony"),
         },
         Product {
-            prod_id: 0,
-            title: String::from("bla"),
+            prod_id: 3,
+            title: String::from("sheep scissors"),
         },
     ];
     let product = Product {
@@ -33,8 +33,10 @@ async fn main() {
         title: String::from("boom-box"),
     };
 
-    let product: Product = conn.update(product).await.unwrap();
+    let product: Vec<Product> = conn.create_multiple(products).await.unwrap();
     dbg!(&product);
+    //let product: Product = conn.update(product).await.unwrap();
+    //dbg!(&product);
 
     //    let deleted = conn.delete_multiple(product).await.unwrap();
     //    dbg!(deleted);
