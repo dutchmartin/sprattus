@@ -2,6 +2,8 @@
 use profugus::PGConnection;
 use profugus::*;
 
+use futures::TryStreamExt;
+
 #[derive(FromSql, ToSql, Eq, PartialEq, Debug)]
 struct Product {
     #[profugus(primary_key)]
@@ -35,7 +37,8 @@ async fn main() {
 
     //    let product: Vec<Product> = conn.create_multiple(products).await.unwrap();
     //    dbg!(&product);
-    let product: Product = conn.update(product).await.unwrap();
+    let product: Vec<Product> = conn.query_multiple_stream("SELECT * from Products limit 10", &[]).await.unwrap().try_collect()
+        .await.unwrap();
     dbg!(&product);
 
     //    let deleted = conn.delete_multiple(product).await.unwrap();

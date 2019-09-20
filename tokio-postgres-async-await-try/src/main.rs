@@ -9,6 +9,7 @@ mod models;
 
 use crate::models::*;
 use futures::TryStreamExt;
+use std::pin::Pin;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -22,7 +23,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let statement = prepare_statement(
         client_ref.clone(),
-        "SELECT * FROM products ORDER BY prod_id DESC limit 5",
+        "SELECT * FROM products ORDER BY prod_id DESC limit 1",
     )
     .await;
 
@@ -53,20 +54,22 @@ async fn prepare_statement(
 async fn get_products(
     client_ref: Arc<Mutex<Client>>,
     statement: Statement,
-) -> Result<Vec<Product>, tokio_postgres::Error> {
-    client_ref
-        .lock()
-        .unwrap()
-        .query(&statement, &[]) // returns a stream<Item = Result<Row, tokio_postgres::Error>>
-        .map_ok(|row: Row| Product {
-            id: row.get(0),
-            category: row.get(1),
-            title: row.get(2),
-            actor: row.get(3),
-            price: BigDecimal::from(0),
-            special: row.get(5),
-            common_prod_id: row.get(6),
+) -> Result<Product, tokio_postgres::Error> {
+    let mut boxed_fut = &mut client_ref.lock().unwrap().query(&statement, &[]).boxed();
+    let mut pinned_fut = Pin::new(&mut boxed_fut);
+    pinned_fut
+        .try_next()
+        .map_ok(|row: Option<Row>| {
+            let row = row.expect("some item");
+            Product {
+                id: row.get(0),
+                category: row.get(1),
+                title: row.get(2),
+                actor: row.get(3),
+                price: BigDecimal::from(0),
+                special: row.get(5),
+                common_prod_id: row.get(6),
+            }
         })
-        .try_collect::<Vec<_>>()
         .await
 }

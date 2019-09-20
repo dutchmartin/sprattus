@@ -1,6 +1,7 @@
-use futures::TryStreamExt;
+use futures::{TryStreamExt, Stream};
 use futures_util::future::FutureExt;
 use futures_util::try_future::TryFutureExt;
+use futures_util::stream::StreamExt;
 use parking_lot::*;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -9,6 +10,7 @@ use tokio;
 use tokio_postgres::*;
 
 use crate::*;
+use std::pin::Pin;
 
 #[derive(Clone)]
 pub struct PGConnection {
@@ -80,12 +82,22 @@ impl PGConnection {
     where
         T: FromSql,
     {
-        let statement = self.client.lock().prepare(sql).await?;
-        let result = { self.client.lock().query(&statement, args) };
-        result
-            .map_ok(|row| T::from_row(&row))
+        self.query_multiple_stream(sql, args).await?
             .try_collect::<Vec<T>>()
             .await
+    }
+    //TODO: comments for explaination.
+    pub async fn query_multiple_stream<T>(
+        self,
+        sql: &str,
+        args: &[&dyn ToSqlItem],
+    ) -> Result<impl Stream<Item = Result<T, Error>>, Error>
+        where
+            T: FromSql,
+    {
+        let statement = self.client.lock().prepare(sql).await?;
+        let result = { self.client.lock().query(&statement, args) };
+        Ok(result.map_ok(|row| T::from_row(&row)))
     }
 
     ///
@@ -114,16 +126,11 @@ impl PGConnection {
     where
         T: FromSql,
     {
-        // TODO: Figure out a way to do this more efficiently without panic on fail.
-        let mut results: Vec<T> = self.query_multiple(&sql, args).await?;
-        let result = results.pop().expect(
-            format!(
-                "The result of the query `{}` should contain at least one row",
-                &sql
-            )
-            .as_ref(),
-        );
-        Ok(result)
+        let mut boxed_future = self.query_multiple_stream(sql, args).await?.boxed();
+        let mut pinned_fut = Pin::new(&mut boxed_future);
+        Ok(pinned_fut
+               .try_next().await?.expect("expected at least one item")
+        )
     }
 
     ///
@@ -182,13 +189,13 @@ impl PGConnection {
                 .lock()
                 .query(&insert, &item.get_values_of_all_fields())
         };
-        Ok(result
-            .map_ok(|row| T::from_row(&row))
-            .try_collect::<Vec<T>>()
-            .await?
-            .pop()
-            .expect("at least it should return a row"))
-        //unimplemented!()
+        let mut boxed_fut = result.boxed();
+        let mut pinned_fut = Pin::new(&mut boxed_fut);
+        pinned_fut
+            .try_next()
+            .map_ok(|row|
+                T::from_row(&row.expect("At least it should return one row"))
+            ).await
     }
 
     ///
@@ -318,12 +325,13 @@ impl PGConnection {
         let insert = insert.await?;
 
         let result = { self.client.lock().query(&insert, &item.get_query_params()) };
-        Ok(result
-            .map_ok(|row| T::from_row(&row))
-            .try_collect::<Vec<T>>()
-            .await?
-            .pop()
-            .expect("at least it should return a row"))
+        let mut boxed_fut = result.boxed();
+        let mut pinned_fut = Pin::new(&mut boxed_fut);
+        pinned_fut
+            .try_next()
+            .map_ok(|row|
+                T::from_row(&row.expect("At least it should return one row"))
+            ).await
     }
 
     ///
@@ -426,12 +434,13 @@ impl PGConnection {
                 .lock()
                 .query(&insert, &[&item.get_primary_key_value()])
         };
-        Ok(result
-            .map_ok(|row| T::from_row(&row))
-            .try_collect::<Vec<T>>()
-            .await?
-            .pop()
-            .expect("at least it should return a row"))
+        let mut boxed_fut = result.boxed();
+        let mut pinned_fut = Pin::new(&mut boxed_fut);
+        pinned_fut
+            .try_next()
+            .map_ok(|row|
+                T::from_row(&row.expect("At least it should return one row"))
+            ).await
     }
 
     ///
@@ -472,25 +481,25 @@ impl PGConnection {
     where
         <T as traits::ToSql>::PK: tokio_postgres::types::ToSql + Sized,
     {
-        let sql = format!(
-            "DELETE FROM {table_name} WHERE {primary_key} IN ({argument_list}) RETURNING *",
-            table_name = T::get_table_name(),
-            primary_key = T::get_primary_key(),
-            argument_list = generate_single_prepared_arguments_list(1, items.len())
-        );
-        let insert = self.client.lock().prepare(sql.as_str());
-        let insert = insert.await?;
-        // TODO: make this work:
-        let params: Vec<_> = items
-            .iter()
-            .map(|item| &item.get_primary_key_value())
-            .collect();
-        let result = { self.client.lock().query(&insert, &params[..]) };
-        Ok(result
-            .map_ok(|row| T::from_row(&row))
-            .try_collect::<Vec<T>>()
-            .await?)
-        //unimplemented!()
+//        let sql = format!(
+//            "DELETE FROM {table_name} WHERE {primary_key} IN ({argument_list}) RETURNING *",
+//            table_name = T::get_table_name(),
+//            primary_key = T::get_primary_key(),
+//            argument_list = generate_single_prepared_arguments_list(1, items.len())
+//        );
+//        let insert = self.client.lock().prepare(sql.as_str());
+//        let insert = insert.await?;
+//        // TODO: make this work:
+//        let params: Vec<_> = items
+//            .iter()
+//            .map(|item| &item.get_primary_key_value())
+//            .collect();
+//        let result = { self.client.lock().query(&insert, &params[..]) };
+//        Ok(result
+//            .map_ok(|row| T::from_row(&row))
+//            .try_collect::<Vec<T>>()
+//            .await?)
+        unimplemented!()
     }
 }
 ///
