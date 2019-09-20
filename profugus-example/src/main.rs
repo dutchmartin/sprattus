@@ -33,10 +33,10 @@ async fn main() {
         title: String::from("boom-box"),
     };
 
-    let product: Vec<Product> = conn.create_multiple(products).await.unwrap();
+//    let product: Vec<Product> = conn.create_multiple(products).await.unwrap();
+//    dbg!(&product);
+    let product: Product = conn.update(product).await.unwrap();
     dbg!(&product);
-    //let product: Product = conn.update(product).await.unwrap();
-    //dbg!(&product);
 
     //    let deleted = conn.delete_multiple(product).await.unwrap();
     //    dbg!(deleted);

@@ -160,35 +160,33 @@ impl PGConnection {
     where
         <T as traits::ToSql>::PK: tokio_postgres::types::ToSql,
     {
-        //        // TODO: change this to a const fn, see https://github.com/rust-lang/rust/issues/57563
-        //        let sql_template = if T::get_prepared_arguments_list() == "$1" {
-        //            "UPDATE {table_name} SET {fields} = {prepared_values} WHERE {primary_key} = ${key_arg_num} RETURNING *"
-        //        } else {
-        //            "UPDATE {table_name} SET ({fields}) = ({prepared_values}) WHERE {primary_key} = ${key_arg_num} RETURNING *"
-        //        };
-        //        let mut sql_vars = HashMap::with_capacity(12);
-        //        sql_vars.insert(String::from("table_name"), T::get_table_name());
-        //        sql_vars.insert(String::from("fields"), T::get_fields());
-        //        sql_vars.insert(String::from("primary_key"), T::get_primary_key());
-        //        let primary_key_arg_number = (T::get_argument_count() + 1).to_string();
-        //        sql_vars.insert(String::from("key_arg_num"), primary_key_arg_number.as_ref());
-        //        sql_vars.insert(
-        //            String::from("prepared_values"),
-        //            T::get_prepared_arguments_list(),
-        //        );
-        //        let sql = strfmt(sql_template, &sql_vars).unwrap();
-        //
-        //        let insert = self.client.lock().prepare(&sql);
-        //        let insert = insert.await?;
-        //        //TODO: make this compile without livetime issues.
-        //        let result = { self.client.lock().query(&insert, &[&item.get_query_params().iter().a&[&item.get_primary_key_value()])]) };
-        //        Ok(result
-        //            .map_ok(|row| T::from_row(&row))
-        //            .try_collect::<Vec<T>>()
-        //            .await?
-        //            .pop()
-        //            .expect("at least it should return a row"))
-        unimplemented!()
+        // FIXME: change this to a const fn, see https://github.com/rust-lang/rust/issues/57563
+        let sql_template = if T::get_prepared_arguments_list() == "$1" {
+            "UPDATE {table_name} SET {fields} = {prepared_values} WHERE {primary_key} = $1 RETURNING *"
+        } else {
+            "UPDATE {table_name} SET ({fields}) = ({prepared_values}) WHERE {primary_key} = $1 RETURNING *"
+        };
+        let mut sql_vars = HashMap::with_capacity(12);
+        sql_vars.insert(String::from("table_name"), T::get_table_name());
+        sql_vars.insert(String::from("fields"), T::get_fields());
+        sql_vars.insert(String::from("primary_key"), T::get_primary_key());
+        let prepared_values = generate_single_prepared_arguments_list(2, T::get_argument_count()+1);
+        sql_vars.insert(
+            String::from("prepared_values"),
+            prepared_values.as_ref(),
+        );
+        let sql = strfmt(sql_template, &sql_vars).unwrap();
+
+        let insert = self.client.lock().prepare(&sql);
+        let insert = insert.await?;
+        let result = { self.client.lock().query(&insert, &item.get_values_of_all_fields()) };
+        Ok(result
+            .map_ok(|row| T::from_row(&row))
+            .try_collect::<Vec<T>>()
+            .await?
+            .pop()
+            .expect("at least it should return a row"))
+        //unimplemented!()
     }
 
     ///
@@ -261,8 +259,6 @@ impl PGConnection {
         sql_vars.insert(String::from("all_fields"), T::get_all_fields());
         sql_vars.insert(String::from("prepared_placeholders"), placeholders.as_str());
         let sql = strfmt(sql_template, &sql_vars).unwrap();
-        dbg!(&sql);
-        //TODO: This does not work, since postgres can not infer the types of the items being sent
         let insert = self.client.lock().prepare(&sql);
         let insert = insert.await?;
         let params: Vec<&dyn ToSqlItem> = items
@@ -276,7 +272,6 @@ impl PGConnection {
             .map_ok(|row| T::from_row(&row))
             .try_collect::<Vec<T>>()
             .await?)
-        // unimplemented!()
     }
 
     ///
@@ -475,24 +470,24 @@ impl PGConnection {
     where
         <T as traits::ToSql>::PK: tokio_postgres::types::ToSql + Sized,
     {
-        //        let sql = format!(
-        //            "DELETE FROM {table_name} WHERE {primary_key} IN ({argument_list}) RETURNING *",
-        //            table_name = T::get_table_name(),
-        //            primary_key = T::get_primary_key(),
-        //            argument_list = generate_single_prepared_arguments_list(items.len())
-        //        );
-        //        let insert = self.client.lock().prepare(sql.as_str());
-        //        let insert = insert.await?;
-        //        // TODO: make this work:
-        //        let params: Vec<_> = items
-        //            .iter()
-        //            .map(|item| &item.get_primary_key_value())
-        //            .collect();
-        //        let result = { self.client.lock().query(&insert, &params[..])};
-        //        Ok(result
-        //            .map_ok(|row| T::from_row(&row))
-        //            .try_collect::<Vec<T>>()
-        //            .await?)
+//                let sql = format!(
+//                    "DELETE FROM {table_name} WHERE {primary_key} IN ({argument_list}) RETURNING *",
+//                    table_name = T::get_table_name(),
+//                    primary_key = T::get_primary_key(),
+//                    argument_list = generate_single_prepared_arguments_list(items.len())
+//                );
+//                let insert = self.client.lock().prepare(sql.as_str());
+//                let insert = insert.await?;
+//                // TODO: make this work:
+//                let params: Vec<_> = items
+//                    .iter()
+//                    .map(|item| &item.get_primary_key_value())
+//                    .collect();
+//                let result = { self.client.lock().query(&insert, &params[..])};
+//                Ok(result
+//                    .map_ok(|row| T::from_row(&row))
+//                    .try_collect::<Vec<T>>()
+//                    .await?)
         unimplemented!()
     }
 }
@@ -547,17 +542,15 @@ fn complete_prepared_arguments_list(
     arguments_list.push(')');
 }
 
-fn generate_single_prepared_arguments_list(no_of_items: usize) -> String {
+fn generate_single_prepared_arguments_list(start_num: usize, end_num: usize) -> String {
     let mut arguments_list: String = String::new();
-    arguments_list.push('(');
-    for i in 1..no_of_items + 1 {
+    for i in start_num..(end_num + 1) {
         arguments_list.push('$');
         arguments_list.push_str(&*i.to_string());
-        match i == no_of_items {
+        match i == end_num {
             true => {}
             false => arguments_list.push(','),
         }
     }
-    arguments_list.push(')');
     arguments_list
 }
