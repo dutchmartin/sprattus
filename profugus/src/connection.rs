@@ -1,7 +1,7 @@
-use futures::{TryStreamExt, Stream};
+use futures::{Stream, TryStreamExt};
 use futures_util::future::FutureExt;
-use futures_util::try_future::TryFutureExt;
 use futures_util::stream::StreamExt;
+use futures_util::try_future::TryFutureExt;
 use parking_lot::*;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -82,7 +82,8 @@ impl PGConnection {
     where
         T: FromSql,
     {
-        self.query_multiple_stream(sql, args).await?
+        self.query_multiple_stream(sql, args)
+            .await?
             .try_collect::<Vec<T>>()
             .await
     }
@@ -92,8 +93,8 @@ impl PGConnection {
         sql: &str,
         args: &[&dyn ToSqlItem],
     ) -> Result<impl Stream<Item = Result<T, Error>>, Error>
-        where
-            T: FromSql,
+    where
+        T: FromSql,
     {
         let statement = self.client.lock().prepare(sql).await?;
         let result = { self.client.lock().query(&statement, args) };
@@ -129,8 +130,9 @@ impl PGConnection {
         let mut boxed_future = self.query_multiple_stream(sql, args).await?.boxed();
         let mut pinned_fut = Pin::new(&mut boxed_future);
         Ok(pinned_fut
-               .try_next().await?.expect("expected at least one item")
-        )
+            .try_next()
+            .await?
+            .expect("expected at least one item"))
     }
 
     ///
@@ -193,9 +195,8 @@ impl PGConnection {
         let mut pinned_fut = Pin::new(&mut boxed_fut);
         pinned_fut
             .try_next()
-            .map_ok(|row|
-                T::from_row(&row.expect("At least it should return one row"))
-            ).await
+            .map_ok(|row| T::from_row(&row.expect("At least it should return one row")))
+            .await
     }
 
     ///
@@ -329,9 +330,8 @@ impl PGConnection {
         let mut pinned_fut = Pin::new(&mut boxed_fut);
         pinned_fut
             .try_next()
-            .map_ok(|row|
-                T::from_row(&row.expect("At least it should return one row"))
-            ).await
+            .map_ok(|row| T::from_row(&row.expect("At least it should return one row")))
+            .await
     }
 
     ///
@@ -438,9 +438,8 @@ impl PGConnection {
         let mut pinned_fut = Pin::new(&mut boxed_fut);
         pinned_fut
             .try_next()
-            .map_ok(|row|
-                T::from_row(&row.expect("At least it should return one row"))
-            ).await
+            .map_ok(|row| T::from_row(&row.expect("At least it should return one row")))
+            .await
     }
 
     ///
@@ -481,24 +480,24 @@ impl PGConnection {
     where
         <T as traits::ToSql>::PK: tokio_postgres::types::ToSql + Sized,
     {
-//        let sql = format!(
-//            "DELETE FROM {table_name} WHERE {primary_key} IN ({argument_list}) RETURNING *",
-//            table_name = T::get_table_name(),
-//            primary_key = T::get_primary_key(),
-//            argument_list = generate_single_prepared_arguments_list(1, items.len())
-//        );
-//        let insert = self.client.lock().prepare(sql.as_str());
-//        let insert = insert.await?;
-//        // TODO: make this work:
-//        let params: Vec<_> = items
-//            .iter()
-//            .map(|item| &item.get_primary_key_value())
-//            .collect();
-//        let result = { self.client.lock().query(&insert, &params[..]) };
-//        Ok(result
-//            .map_ok(|row| T::from_row(&row))
-//            .try_collect::<Vec<T>>()
-//            .await?)
+        //        let sql = format!(
+        //            "DELETE FROM {table_name} WHERE {primary_key} IN ({argument_list}) RETURNING *",
+        //            table_name = T::get_table_name(),
+        //            primary_key = T::get_primary_key(),
+        //            argument_list = generate_single_prepared_arguments_list(1, items.len())
+        //        );
+        //        let insert = self.client.lock().prepare(sql.as_str());
+        //        let insert = insert.await?;
+        //        // TODO: make this work:
+        //        let params: Vec<_> = items
+        //            .iter()
+        //            .map(|item| &item.get_primary_key_value())
+        //            .collect();
+        //        let result = { self.client.lock().query(&insert, &params[..]) };
+        //        Ok(result
+        //            .map_ok(|row| T::from_row(&row))
+        //            .try_collect::<Vec<T>>()
+        //            .await?)
         unimplemented!()
     }
 }
