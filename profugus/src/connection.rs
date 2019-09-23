@@ -8,9 +8,9 @@ use std::sync::Arc;
 use strfmt::strfmt;
 use tokio;
 use tokio_postgres::*;
-
-use crate::*;
 use std::pin::Pin;
+use crate::*;
+
 
 #[derive(Clone)]
 pub struct PGConnection {
@@ -98,7 +98,12 @@ impl PGConnection {
     {
         let statement = self.client.lock().prepare(sql).await?;
         let result = { self.client.lock().query(&statement, args) };
-        Ok(result.map_ok(|row| T::from_row(&row)))
+        Ok(result.map(|row_result| -> Result<T, Error> {
+            match row_result {
+                Ok(row) => { return T::from_row(&row) },
+                Err(E) => { return Err(E) }
+            }
+        }))
     }
 
     ///
@@ -196,7 +201,7 @@ impl PGConnection {
         pinned_fut
             .try_next()
             .map_ok(|row| T::from_row(&row.expect("At least it should return one row")))
-            .await
+            .await?
     }
 
     ///
@@ -278,10 +283,12 @@ impl PGConnection {
             .collect();
 
         let result = { self.client.lock().query(&insert, &params) };
-        Ok(result
-            .map_ok(|row| T::from_row(&row))
-            .try_collect::<Vec<T>>()
-            .await?)
+        Ok(result.map(|row_result| -> Result<T, Error> {
+            match row_result {
+                Ok(row) => { return T::from_row(&row) },
+                Err(E) => { return Err(E) }
+            }
+        }).try_collect::<Vec<T>>().await?)
     }
 
     ///
@@ -331,7 +338,7 @@ impl PGConnection {
         pinned_fut
             .try_next()
             .map_ok(|row| T::from_row(&row.expect("At least it should return one row")))
-            .await
+            .await?
     }
 
     ///
@@ -384,10 +391,12 @@ impl PGConnection {
             .flatten()
             .collect();
         let result = { self.client.lock().query(&insert, &params) };
-        Ok(result
-            .map_ok(|row| T::from_row(&row))
-            .try_collect::<Vec<T>>()
-            .await?)
+        Ok(result.map(|row_result| -> Result<T, Error> {
+            match row_result {
+                Ok(row) => { return T::from_row(&row) },
+                Err(E) => { return Err(E) }
+            }
+        }).try_collect::<Vec<T>>().await?)
     }
 
     ///
@@ -439,7 +448,7 @@ impl PGConnection {
         pinned_fut
             .try_next()
             .map_ok(|row| T::from_row(&row.expect("At least it should return one row")))
-            .await
+            .await?
     }
 
     ///

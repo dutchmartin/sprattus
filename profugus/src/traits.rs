@@ -1,11 +1,11 @@
 use tokio_postgres::types::ToSql as ToSqlItem;
-use tokio_postgres::Row;
+use tokio_postgres::{Row, Error};
 
 pub trait FromSql {
     ///
     /// Implementors of this method create an instance of Self with the content of a Row.
     ///
-    fn from_row(row: &Row) -> Self;
+    fn from_row(row: &Row) -> Result<Self, Error> where Self: Sized;
 }
 
 pub trait ToSql {

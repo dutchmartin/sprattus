@@ -59,17 +59,17 @@ async fn get_products(
     let mut pinned_fut = Pin::new(&mut boxed_fut);
     pinned_fut
         .try_next()
-        .map_ok(|row: Option<Row>| {
+        .map_ok(|row: Option<Row>| -> Result<Product, Box<dyn Error>> {
             let row = row.expect("some item");
-            Product {
-                id: row.get(0),
-                category: row.get(1),
-                title: row.get(2),
-                actor: row.get(3),
+            Ok(Product {
+                id: row.try_get(0)?,
+                category: row.try_get(1)?,
+                title: row.try_get(2)?,
+                actor: row.try_get(3)?,
                 price: BigDecimal::from(0),
-                special: row.get(5),
-                common_prod_id: row.get(6),
-            }
+                special: row.try_get(5)?,
+                common_prod_id: row.try_get(6)?,
+            })
         })
-        .await
+        .await?
 }

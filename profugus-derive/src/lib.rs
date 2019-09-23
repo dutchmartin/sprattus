@@ -34,13 +34,11 @@ pub fn from_sql(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
     // Build the output.
     let expanded = quote! {
-        use profugus::Row;
-
         impl FromSql for #name {
-            fn from_row(row: &Row) -> Self {
-                Self {
-                    #(#fields : row.get(stringify!(#fields))),*
-                }
+            fn from_row(row: &Row) -> Result<Self, Error> where Self: Sized {
+                Ok(Self {
+                    #(#fields : row.try_get(stringify!(#fields))?),*
+                })
             }
         }
     };
