@@ -1,16 +1,15 @@
+use crate::*;
 use futures::{Stream, TryStreamExt};
 use futures_util::future::FutureExt;
 use futures_util::stream::StreamExt;
 use futures_util::try_future::TryFutureExt;
 use parking_lot::*;
 use std::collections::HashMap;
+use std::pin::Pin;
 use std::sync::Arc;
 use strfmt::strfmt;
 use tokio;
 use tokio_postgres::*;
-use std::pin::Pin;
-use crate::*;
-
 
 #[derive(Clone)]
 pub struct PGConnection {
@@ -100,8 +99,8 @@ impl PGConnection {
         let result = { self.client.lock().query(&statement, args) };
         Ok(result.map(|row_result| -> Result<T, Error> {
             match row_result {
-                Ok(row) => { return T::from_row(&row) },
-                Err(E) => { return Err(E) }
+                Ok(row) => return T::from_row(&row),
+                Err(e) => return Err(e),
             }
         }))
     }
@@ -283,12 +282,15 @@ impl PGConnection {
             .collect();
 
         let result = { self.client.lock().query(&insert, &params) };
-        Ok(result.map(|row_result| -> Result<T, Error> {
-            match row_result {
-                Ok(row) => { return T::from_row(&row) },
-                Err(E) => { return Err(E) }
-            }
-        }).try_collect::<Vec<T>>().await?)
+        Ok(result
+            .map(|row_result| -> Result<T, Error> {
+                match row_result {
+                    Ok(row) => return T::from_row(&row),
+                    Err(e) => return Err(e),
+                }
+            })
+            .try_collect::<Vec<T>>()
+            .await?)
     }
 
     ///
@@ -391,12 +393,15 @@ impl PGConnection {
             .flatten()
             .collect();
         let result = { self.client.lock().query(&insert, &params) };
-        Ok(result.map(|row_result| -> Result<T, Error> {
-            match row_result {
-                Ok(row) => { return T::from_row(&row) },
-                Err(E) => { return Err(E) }
-            }
-        }).try_collect::<Vec<T>>().await?)
+        Ok(result
+            .map(|row_result| -> Result<T, Error> {
+                match row_result {
+                    Ok(row) => return T::from_row(&row),
+                    Err(e) => return Err(e),
+                }
+            })
+            .try_collect::<Vec<T>>()
+            .await?)
     }
 
     ///
