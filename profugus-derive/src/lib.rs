@@ -7,7 +7,7 @@ use syn::export::TokenStream2;
 use syn::Type::Path;
 use syn::{parse_macro_input, Attribute, Data::Struct, DeriveInput, Field, Type};
 
-#[proc_macro_derive(FromSql)]
+#[proc_macro_derive(FromSql, attributes(profugus))]
 pub fn from_sql(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
 
@@ -54,7 +54,7 @@ struct StructField {
 }
 
 // TODO: remove attributes in the derived struct so the feature flag #![feature(custom_attribute)] is not needed.
-#[proc_macro_derive(ToSql)]
+#[proc_macro_derive(ToSql, attributes(profugus))]
 pub fn to_sql_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let derive_input = parse_macro_input!(input as DeriveInput);
 

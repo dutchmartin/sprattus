@@ -1,7 +1,4 @@
-#![feature(custom_attribute)]
 use profugus::*;
-
-use futures::TryStreamExt;
 
 #[derive(FromSql, ToSql, Eq, PartialEq, Debug)]
 struct Product {
