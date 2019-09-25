@@ -17,9 +17,10 @@ pub fn from_sql(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
     match input.data {
         Struct(data) => {
-            for field in data.fields {
+            for field in data.fields {dbg!(&field);
                 match field.ident {
                     Some(ident) => {
+
                         fields.push(TokenStream2::from(TokenTree::from(ident)));
                     }
                     _ => panic!("Cannot implement FromSql on a tuple struct"),
@@ -53,7 +54,6 @@ struct StructField {
     pub field_type: Ident,
 }
 
-// TODO: remove attributes in the derived struct so the feature flag #![feature(custom_attribute)] is not needed.
 #[proc_macro_derive(ToSql, attributes(profugus))]
 pub fn to_sql_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let derive_input = parse_macro_input!(input as DeriveInput);
@@ -174,12 +174,13 @@ fn build_to_sql_impl(
             type PK = #primary_key_type;
 
             #[inline]
-            fn get_primary_key_value(&self) -> #primary_key_type
-                where
-        Self::PK: ToSqlItem + Sized + Copy
-        {
+            fn get_primary_key_value(&self) -> Self::PK
+            where
+                Self::PK: ToSqlItem + Sized + Copy
+            {
                 self.#primary_key
             }
+
             #[inline]
             fn get_all_fields() -> &'static str {
                 #all_field_list_string

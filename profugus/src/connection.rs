@@ -487,13 +487,11 @@ impl PGConnection {
     ///     conn.delete(products).await.unwrap();
     /// }
     /// ```
-    pub async fn delete_multiple<P, T>(
-        self,
-        items: Vec<T>,
-    ) -> Result<Vec<T>, Error>
-    where P: tokio_postgres::types::ToSql + Copy,
+    pub async fn delete_multiple<P, T>(self, items: Vec<T>) -> Result<Vec<T>, Error>
+    where
+        P: tokio_postgres::types::ToSql + Copy,
         T: traits::FromSql + traits::ToSql<PK = P>,
-        <T as traits::ToSql>::PK: Copy
+        <T as traits::ToSql>::PK: Copy,
     {
         let sql = format!(
             "DELETE FROM {table_name} WHERE {primary_key} IN ({argument_list}) RETURNING *",
@@ -503,12 +501,14 @@ impl PGConnection {
         );
         let insert = self.client.lock().prepare(sql.as_str());
         let insert = insert.await?;
-        // TODO: make this work:
         let params: Vec<P> = items
             .iter()
             .map(|item| item.get_primary_key_value())
             .collect();
-        let p = params.iter().map(|i| i as &dyn tokio_postgres::types::ToSql).collect::<Vec<_>>();
+        let p = params
+            .iter()
+            .map(|i| i as &dyn tokio_postgres::types::ToSql)
+            .collect::<Vec<_>>();
         let result = { self.client.lock().query(&insert, p.as_slice()) };
         Ok(result
             .map(|row_result| -> Result<T, Error> {
@@ -519,7 +519,6 @@ impl PGConnection {
             })
             .try_collect::<Vec<T>>()
             .await?)
-        //unimplemented!()
     }
 }
 ///

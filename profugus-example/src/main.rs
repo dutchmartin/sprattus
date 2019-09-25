@@ -1,10 +1,12 @@
 use profugus::*;
 
 #[derive(FromSql, ToSql, Eq, PartialEq, Debug)]
+#[profugus(table_name = "product")]
 struct Product {
     #[profugus(primary_key)]
     prod_id: i32,
-    title: String,
+    #[profugus(name = "title")]
+    prod_title: String,
 }
 
 #[tokio::main]
@@ -15,20 +17,20 @@ async fn main() {
     let products = vec![
         Product {
             prod_id: 1,
-            title: String::from("Sql insert lesson"),
+            prod_title: String::from("Sql insert lesson"),
         },
         Product {
             prod_id: 2,
-            title: String::from("my little pony"),
+            prod_title: String::from("my little pony"),
         },
         Product {
             prod_id: 3,
-            title: String::from("sheep scissors"),
+            prod_title: String::from("sheep scissors"),
         },
     ];
     let product = Product {
         prod_id: 2,
-        title: String::from("boom-box"),
+        prod_title: String::from("boom-box"),
     };
 
     let product: Vec<Product> = conn.create_multiple(products).await.unwrap();
