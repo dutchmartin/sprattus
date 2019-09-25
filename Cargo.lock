@@ -25,17 +25,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "bigdecimal"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "460825c9e21708024d67c07057cd5560e5acdccac85de0de624a81d3de51bacb"
-dependencies = [
- "num-bigint",
- "num-integer",
- "num-traits",
-]
-
-[[package]]
 name = "bitflags"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -489,35 +478,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2f9667ddcc6cc8a43afc9b7917599d7216aa09c463919ea32c59ed6cac8bc945"
 
 [[package]]
-name = "num-bigint"
-version = "0.2.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "57450397855d951f1a41305e54851b1a7b8f5d2e349543a02a2effe25459f718"
-dependencies = [
- "num-integer",
- "num-traits",
-]
-
-[[package]]
-name = "num-integer"
-version = "0.1.41"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b85e541ef8255f6cf42bbfe4ef361305c6c135d10919ecc26126c4e5ae94bc09"
-dependencies = [
- "autocfg",
- "num-traits",
-]
-
-[[package]]
-name = "num-traits"
-version = "0.2.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6ba9a427cfca2be13aa6f6403b0b7e7368fe982bfa16fccc450ce74c46cd9b32"
-dependencies = [
- "autocfg",
-]
-
-[[package]]
 name = "num_cpus"
 version = "1.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -583,6 +543,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "pin-project"
+version = "0.4.0-alpha.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a3ce8c130b2e0afb654677f8cfda5e943a6f757143e8fa3a5157a62018bf9ba3"
+dependencies = [
+ "pin-project-internal",
+]
+
+[[package]]
+name = "pin-project-internal"
+version = "0.4.0-alpha.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fe620a84170595be8c1554f05068c42c8858b1cd031f5175040c5171cf97e944"
+dependencies = [
+ "proc-macro2 1.0.2",
+ "quote 1.0.2",
+ "syn 1.0.5",
+]
+
+[[package]]
 name = "pin-utils"
 version = "0.1.0-alpha.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -601,7 +581,7 @@ dependencies = [
 [[package]]
 name = "postgres-protocol"
 version = "0.4.1"
-source = "git+https://github.com/sfackler/rust-postgres.git?branch=std-futures#54e52bd8b2f7839cafa9ebc6f0303bf18628345a"
+source = "git+https://github.com/sfackler/rust-postgres.git#a8d945c70ea6ddb6303d457f37a2de00ef6e8d80"
 dependencies = [
  "base64",
  "byteorder",
@@ -1011,9 +991,9 @@ dependencies = [
 
 [[package]]
 name = "tokio"
-version = "0.2.0-alpha.4"
+version = "0.2.0-alpha.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "be69f7efc3a6e335fbd598f486036f9ef9145b854456d2b2503ac91f0bc95258"
+checksum = "556fe6824daa18951835d467ecdc7110a204decfa219483c853d3dbb0014d177"
 dependencies = [
  "bytes",
  "futures-core-preview",
@@ -1033,9 +1013,9 @@ dependencies = [
 
 [[package]]
 name = "tokio-codec"
-version = "0.2.0-alpha.4"
+version = "0.2.0-alpha.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b4ccd972ca855244b2e71ccba44a56b5cdcebe21c4b977ef5a2f23e898a31b97"
+checksum = "7ec28841e343a014165411c3b8a70125d8f9cc871b063b9ef1982da09eb88c4d"
 dependencies = [
  "bytes",
  "futures-core-preview",
@@ -1046,9 +1026,9 @@ dependencies = [
 
 [[package]]
 name = "tokio-executor"
-version = "0.2.0-alpha.4"
+version = "0.2.0-alpha.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "345c88d08e60054624ac16be7feef0596a9151b63e20de75ee771effe67c3639"
+checksum = "b7c590b4dc15f97437e5711a355ef3273f43db0e564dfdee5d3f4dc688e827d0"
 dependencies = [
  "crossbeam-channel",
  "crossbeam-deque",
@@ -1065,9 +1045,9 @@ dependencies = [
 
 [[package]]
 name = "tokio-fs"
-version = "0.2.0-alpha.4"
+version = "0.2.0-alpha.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a1468a7f71c1fcb0abfbe8467eb892cd566f7fd664307d5f54e0336a6aa381ef"
+checksum = "d35b519737eb8a363b6daf1b907d7c0bd27c6c7b6b0422f18c006b203adfb523"
 dependencies = [
  "futures-core-preview",
  "futures-util-preview",
@@ -1079,22 +1059,23 @@ dependencies = [
 
 [[package]]
 name = "tokio-io"
-version = "0.2.0-alpha.4"
+version = "0.2.0-alpha.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9031c46146fb6bfb5be43d3e33b23d119ba175ec85c44850fbf9beff83aa125d"
+checksum = "0aeaf26040975e7073240933f6048ea845fc0d2f814f89544a8d68a9c487b882"
 dependencies = [
  "bytes",
  "futures-core-preview",
  "log",
  "memchr",
+ "pin-project",
  "pin-utils",
 ]
 
 [[package]]
 name = "tokio-macros"
-version = "0.2.0-alpha.4"
+version = "0.2.0-alpha.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7c9074903dba9ac096b1f4eb49611d306ad44fecd4227ec95c40de914c3ff505"
+checksum = "b02b0260e8187159159c191c8de31725274b2d37ddb7a7efed4b22988b35ac45"
 dependencies = [
  "quote 1.0.2",
  "syn 1.0.5",
@@ -1102,9 +1083,9 @@ dependencies = [
 
 [[package]]
 name = "tokio-net"
-version = "0.2.0-alpha.4"
+version = "0.2.0-alpha.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2a11912ff0a3f594c4cfe6b0a94b8d0fc395cd38db2c1feebcec1bdbec027597"
+checksum = "812d4903f9b6e91ca1d3fb9e2acb30f5c0881502f5410b9c947136aa8f3d9a6b"
 dependencies = [
  "bytes",
  "crossbeam-utils",
@@ -1129,7 +1110,7 @@ dependencies = [
 [[package]]
 name = "tokio-postgres"
 version = "0.4.0-rc.3"
-source = "git+https://github.com/sfackler/rust-postgres.git?branch=std-futures#54e52bd8b2f7839cafa9ebc6f0303bf18628345a"
+source = "git+https://github.com/sfackler/rust-postgres.git#a8d945c70ea6ddb6303d457f37a2de00ef6e8d80"
 dependencies = [
  "bytes",
  "fallible-iterator",
@@ -1146,21 +1127,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "tokio-postgres-async-await-try"
-version = "0.1.0"
-dependencies = [
- "bigdecimal",
- "futures-preview",
- "futures-util-preview",
- "tokio",
- "tokio-postgres",
-]
-
-[[package]]
 name = "tokio-sync"
-version = "0.2.0-alpha.4"
+version = "0.2.0-alpha.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3c63865749332d5ce8e21ebeb5992a2b65636b2fa4d6e5f9322bbbbb3a811225"
+checksum = "8acfd5281a590399968771fb03ee104be3df2519fbca609c0a38c467458e1467"
 dependencies = [
  "fnv",
  "futures-core-preview",
@@ -1170,9 +1140,9 @@ dependencies = [
 
 [[package]]
 name = "tokio-timer"
-version = "0.3.0-alpha.4"
+version = "0.3.0-alpha.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "799925fa2682e7b23510f081c3cc99f30be640d5be617f837dc730e20f916f0e"
+checksum = "6dfc753b6771a6aff4de8ea6a704044488d2c2918e161a0266a8eb7ad53a1a2e"
 dependencies = [
  "crossbeam-utils",
  "futures-core-preview",
