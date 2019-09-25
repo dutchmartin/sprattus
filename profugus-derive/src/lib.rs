@@ -174,7 +174,10 @@ fn build_to_sql_impl(
             type PK = #primary_key_type;
 
             #[inline]
-            fn get_primary_key_value(self) -> #primary_key_type {
+            fn get_primary_key_value(&self) -> #primary_key_type
+                where
+        Self::PK: ToSqlItem + Sized + Copy
+        {
                 self.#primary_key
             }
             #[inline]

@@ -433,7 +433,7 @@ impl PGConnection {
     /// ```
     pub async fn delete<T: traits::FromSql + traits::ToSql>(self, item: T) -> Result<T, Error>
     where
-        <T as traits::ToSql>::PK: tokio_postgres::types::ToSql,
+        <T as traits::ToSql>::PK: tokio_postgres::types::ToSql + Copy,
     {
         let sql = format!(
             "DELETE FROM {table_name} WHERE {primary_key} IN ($1) RETURNING *",
@@ -487,32 +487,39 @@ impl PGConnection {
     ///     conn.delete(products).await.unwrap();
     /// }
     /// ```
-    pub async fn delete_multiple<T: traits::FromSql + traits::ToSql>(
+    pub async fn delete_multiple<P, T>(
         self,
         items: Vec<T>,
     ) -> Result<Vec<T>, Error>
-    where
-        <T as traits::ToSql>::PK: tokio_postgres::types::ToSql + Sized,
+    where P: tokio_postgres::types::ToSql + Copy,
+        T: traits::FromSql + traits::ToSql<PK = P>,
+        <T as traits::ToSql>::PK: Copy
     {
-        //        let sql = format!(
-        //            "DELETE FROM {table_name} WHERE {primary_key} IN ({argument_list}) RETURNING *",
-        //            table_name = T::get_table_name(),
-        //            primary_key = T::get_primary_key(),
-        //            argument_list = generate_single_prepared_arguments_list(1, items.len())
-        //        );
-        //        let insert = self.client.lock().prepare(sql.as_str());
-        //        let insert = insert.await?;
-        //        // TODO: make this work:
-        //        let params: Vec<_> = items
-        //            .iter()
-        //            .map(|item| &item.get_primary_key_value())
-        //            .collect();
-        //        let result = { self.client.lock().query(&insert, &params[..]) };
-        //        Ok(result
-        //            .map_ok(|row| T::from_row(&row))
-        //            .try_collect::<Vec<T>>()
-        //            .await?)
-        unimplemented!()
+        let sql = format!(
+            "DELETE FROM {table_name} WHERE {primary_key} IN ({argument_list}) RETURNING *",
+            table_name = T::get_table_name(),
+            primary_key = T::get_primary_key(),
+            argument_list = generate_single_prepared_arguments_list(1, items.len())
+        );
+        let insert = self.client.lock().prepare(sql.as_str());
+        let insert = insert.await?;
+        // TODO: make this work:
+        let params: Vec<P> = items
+            .iter()
+            .map(|item| item.get_primary_key_value())
+            .collect();
+        let p = params.iter().map(|i| i as &dyn tokio_postgres::types::ToSql).collect::<Vec<_>>();
+        let result = { self.client.lock().query(&insert, p.as_slice()) };
+        Ok(result
+            .map(|row_result| -> Result<T, Error> {
+                match row_result {
+                    Ok(row) => return T::from_row(&row),
+                    Err(e) => return Err(e),
+                }
+            })
+            .try_collect::<Vec<T>>()
+            .await?)
+        //unimplemented!()
     }
 }
 ///

@@ -22,9 +22,9 @@ pub trait ToSql {
 
     type PK;
 
-    fn get_primary_key_value(self) -> Self::PK
+    fn get_primary_key_value(&self) -> Self::PK
     where
-        Self::PK: ToSqlItem + Sized;
+        Self::PK: ToSqlItem + Sized + Copy;
 
     ///
     /// The fields that contain the data of the table.
