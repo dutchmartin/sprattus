@@ -1,6 +1,6 @@
 [workspace]
 members = [
     "profugus",
-    "profugus-example",
+    "profugus-test",
     "profugus-derive",
 ]

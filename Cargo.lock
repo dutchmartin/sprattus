@@ -669,7 +669,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "profugus-example"
+name = "profugus-test"
 version = "0.1.0"
 dependencies = [
  "futures-preview",

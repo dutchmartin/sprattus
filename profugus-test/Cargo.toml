@@ -1,5 +1,5 @@
 [package]
-name = "profugus-example"
+name = "profugus-test"
 version = "0.1.0"
 authors = ["Martijn Groeneveldt <Martijn Groeneveldt>"]
 edition = "2018"
