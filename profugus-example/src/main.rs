@@ -4,7 +4,8 @@ use profugus::*;
 #[profugus(table_name = "product")]
 struct Product {
     #[profugus(primary_key)]
-    prod_id: i32,
+    #[profugus(name = "prod_id")]
+    id: i32,
     #[profugus(name = "title")]
     prod_title: String,
 }
@@ -16,20 +17,20 @@ async fn main() {
         .unwrap();
     let products = vec![
         Product {
-            prod_id: 1,
+            id: 1,
             prod_title: String::from("Sql insert lesson"),
         },
         Product {
-            prod_id: 2,
+            id: 2,
             prod_title: String::from("my little pony"),
         },
         Product {
-            prod_id: 3,
+            id: 3,
             prod_title: String::from("sheep scissors"),
         },
     ];
     let product = Product {
-        prod_id: 2,
+        id: 2,
         prod_title: String::from("boom-box"),
     };
 

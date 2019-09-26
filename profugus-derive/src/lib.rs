@@ -44,16 +44,17 @@ pub fn from_sql(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                                                     ident.to_string().as_str(),
                                                 ),
                                             });
-                                            continue 'attribute_loop;
+                                            break 'attribute_loop;
+                                        } else {
+                                            let sql_name = match value {
+                                                None => Literal::string(ident.to_string().as_str()),
+                                                Some(sql_value) => sql_value,
+                                            };
+                                            fields.push(SqlField {
+                                                rust_name: ident.clone(),
+                                                sql_name,
+                                            });
                                         }
-                                        let sql_name = match value {
-                                            None => Literal::string(ident.to_string().as_str()),
-                                            Some(sql_value) => sql_value,
-                                        };
-                                        fields.push(SqlField {
-                                            rust_name: ident.clone(),
-                                            sql_name,
-                                        });
                                     }
                                     _ => panic!("Cannot implement FromSql on a tuple struct"),
                                 }
