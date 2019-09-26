@@ -99,8 +99,8 @@ impl PGConnection {
         let result = { self.client.lock().query(&statement, args) };
         Ok(result.map(|row_result| -> Result<T, Error> {
             match row_result {
-                Ok(row) => return T::from_row(&row),
-                Err(e) => return Err(e),
+                Ok(row) => T::from_row(&row),
+                Err(e) => Err(e),
             }
         }))
     }
@@ -285,8 +285,8 @@ impl PGConnection {
         Ok(result
             .map(|row_result| -> Result<T, Error> {
                 match row_result {
-                    Ok(row) => return T::from_row(&row),
-                    Err(e) => return Err(e),
+                    Ok(row) => T::from_row(&row),
+                    Err(e) => Err(e),
                 }
             })
             .try_collect::<Vec<T>>()
@@ -396,8 +396,8 @@ impl PGConnection {
         Ok(result
             .map(|row_result| -> Result<T, Error> {
                 match row_result {
-                    Ok(row) => return T::from_row(&row),
-                    Err(e) => return Err(e),
+                    Ok(row) => T::from_row(&row),
+                    Err(e) => Err(e),
                 }
             })
             .try_collect::<Vec<T>>()
@@ -513,8 +513,8 @@ impl PGConnection {
         Ok(result
             .map(|row_result| -> Result<T, Error> {
                 match row_result {
-                    Ok(row) => return T::from_row(&row),
-                    Err(e) => return Err(e),
+                    Ok(row) => T::from_row(&row),
+                    Err(e) => Err(e),
                 }
             })
             .try_collect::<Vec<T>>()
@@ -537,7 +537,7 @@ where
     T: ToSql,
 {
     let mut arguments_list: String =
-        String::from(format!("({})", T::get_prepared_arguments_list_with_types()));
+        format!("({})", T::get_prepared_arguments_list_with_types());
     if no_of_items == 1 {
         return arguments_list;
     }
@@ -574,12 +574,11 @@ fn complete_prepared_arguments_list(
 
 fn generate_single_prepared_arguments_list(start_num: usize, end_num: usize) -> String {
     let mut arguments_list: String = String::new();
-    for i in start_num..(end_num + 1) {
+    for i in start_num..=end_num {
         arguments_list.push('$');
         arguments_list.push_str(&*i.to_string());
-        match i == end_num {
-            true => {}
-            false => arguments_list.push(','),
+        if i != end_num {
+            arguments_list.push(',');
         }
     }
     arguments_list

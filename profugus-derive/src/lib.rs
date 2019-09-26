@@ -1,11 +1,17 @@
 extern crate proc_macro;
 
-use proc_macro2::TokenTree::{Group, Ident as Ident2, Literal, Punct};
-use proc_macro2::{Ident, TokenTree};
+use proc_macro2::TokenTree::{Group, Ident as Ident2, Punct};
+use proc_macro2::{Ident, Literal, Span, TokenTree};
 use quote::quote;
 use syn::export::TokenStream2;
 use syn::Type::Path;
 use syn::{parse_macro_input, Attribute, Data::Struct, DeriveInput, Field, Type};
+
+#[derive(Debug)]
+struct SqlField {
+    pub rust_name: Ident,
+    pub sql_name: Literal,
+}
 
 #[proc_macro_derive(FromSql, attributes(profugus))]
 pub fn from_sql(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
@@ -13,17 +19,49 @@ pub fn from_sql(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
     // Gather data.
     let name = &input.ident;
-    let mut fields: Vec<TokenStream2> = Vec::new();
+    let mut fields: Vec<SqlField> = Vec::new();
 
     match input.data {
         Struct(data) => {
-            for field in data.fields {dbg!(&field);
-                match field.ident {
-                    Some(ident) => {
-
-                        fields.push(TokenStream2::from(TokenTree::from(ident)));
+            for field in data.fields {
+                'attribute_loop: for attr in field.attrs {
+                    if let Some(ident) = attr.path.segments.first() {
+                        if ident.ident.eq("profugus") {
+                            // Attr is ours, let's parse it.
+                            for tokens in attr.tokens.into_iter() {
+                                let group = match tokens {
+                                    Group(group) => group,
+                                    _ => panic!("cannot find a group of tokens to parse"),
+                                };
+                                let (key, value) = get_key_value_of_attribute(group);
+                                match &field.ident {
+                                    Some(ident) => {
+                                        // Validate if the rename attribute is used.
+                                        if !key.eq("name") {
+                                            fields.push(SqlField {
+                                                rust_name: ident.clone(),
+                                                sql_name: Literal::string(
+                                                    ident.to_string().as_str(),
+                                                ),
+                                            });
+                                            continue 'attribute_loop;
+                                        }
+                                        let sql_name = match value {
+                                            None => Literal::string(ident.to_string().as_str()),
+                                            Some(sql_value) => sql_value,
+                                        };
+                                        fields.push(SqlField {
+                                            rust_name: ident.clone(),
+                                            sql_name,
+                                        });
+                                    }
+                                    _ => panic!("Cannot implement FromSql on a tuple struct"),
+                                }
+                            }
+                        } else {
+                            continue;
+                        }
                     }
-                    _ => panic!("Cannot implement FromSql on a tuple struct"),
                 }
             }
         }
@@ -33,19 +71,27 @@ pub fn from_sql(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
         )),
     };
 
+    // Build the lines for constructing the struct.
+    let mut struct_lines: Vec<TokenStream2> = Vec::new();
+    for field in fields {
+        let rust_name = &field.rust_name;
+        let sql_name = &field.sql_name;
+        struct_lines.push(quote!(
+            #rust_name : row.try_get(#sql_name)?
+        ));
+    }
+
     // Build the output.
     let expanded = quote! {
         impl FromSql for #name {
             fn from_row(row: &Row) -> Result<Self, Error> where Self: Sized {
                 Ok(Self {
-                    #(#fields : row.try_get(stringify!(#fields))?),*
+                    #(#struct_lines),*
                 })
             }
         }
     };
-
-    // Hand the output tokens back to the compiler
-    proc_macro::TokenStream::from(expanded)
+    expanded.into()
 }
 
 struct StructField {
@@ -91,9 +137,10 @@ pub fn to_sql_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream 
             'key_name_search: for field in &data.fields {
                 for attr in &field.attrs {
                     'inner: for segment in &attr.path.segments {
-                        match segment.ident.to_string().eq("profugus") {
-                            true => break 'inner,
-                            false => break 'key_name_search,
+                        if segment.ident.to_string().eq("profugus") {
+                            continue 'inner;
+                        } else {
+                            break 'key_name_search;
                         }
                     }
                     if attr.tokens.to_string().contains("primary_key") {
@@ -135,9 +182,7 @@ pub fn to_sql_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream 
 
 fn get_field_name(field: &Field) -> Ident {
     match &field.ident {
-        Some(ident) => {
-            return ident.clone();
-        }
+        Some(ident) => ident.clone(),
         _ => panic!("Could not find a name for one of the fields in your struct"),
     }
 }
@@ -151,7 +196,7 @@ fn build_to_sql_impl(
     field_structs: Vec<StructField>,
 ) -> proc_macro::TokenStream {
     // Remove primary key from fields list
-    field_list.retain(|el| el.to_string() != primary_key.to_string());
+    field_list.retain(|el| el.to_string() != *primary_key.to_string());
 
     let prepared_arguments_list = generate_argument_list(field_list.len());
     let field_list_string = generate_field_list(&field_list);
@@ -219,8 +264,7 @@ fn build_to_sql_impl(
     );
     tokens.into()
 }
-
-#[inline]
+#[allow(clippy::unnecessary_operation)]
 fn get_table_name_from_attributes(attributes: Vec<Attribute>) -> Option<String> {
     for attribute in attributes {
         match attribute.path.segments.first() {
@@ -246,7 +290,9 @@ fn get_table_name_from_attributes(attributes: Vec<Attribute>) -> Option<String> 
                                     break 'table_name_search;
                                 }
                             }
-                            Literal(literal) => return Some(literal.to_string().replace("\"", "")),
+                            TokenTree::Literal(literal) => {
+                                Some(literal.to_string().replace("\"", ""));
+                            }
                             _ => break 'table_name_search,
                         }
                     }
@@ -258,22 +304,45 @@ fn get_table_name_from_attributes(attributes: Vec<Attribute>) -> Option<String> 
     None
 }
 
+fn get_key_value_of_attribute(tokens: proc_macro2::Group) -> (Ident, Option<Literal>) {
+    let mut name: Ident = Ident::new("none", Span::call_site());
+    for token in tokens.stream() {
+        match token {
+            Ident2(ident) => {
+                name = ident;
+            }
+            Punct(punct) => {
+                if punct.as_char() != '=' {
+                    return (name, None);
+                }
+            }
+            TokenTree::Literal(literal) => {
+                return (name, Some(literal));
+            }
+            _ => {}
+        }
+    }
+    (name, None)
+}
+
 fn generate_argument_list(length: usize) -> String {
     let mut prepared_arguments_list = String::new();
-    for i in 1..length + 1 {
-        match i == length {
-            true => prepared_arguments_list.push_str(format!("${}", i).as_str()),
-            false => prepared_arguments_list.push_str(format!("${},", i).as_str()),
+    for i in 1..=length {
+        if i == length {
+            prepared_arguments_list.push_str(format!("${}", i).as_str());
+        } else {
+            prepared_arguments_list.push_str(format!("${},", i).as_str());
         }
     }
     prepared_arguments_list
 }
-fn generate_field_list(field_list: &Vec<TokenStream2>) -> String {
+fn generate_field_list(field_list: &[TokenStream2]) -> String {
     let mut field_list_str = String::new();
     for (i, field) in field_list.iter().enumerate() {
-        match i == field_list.len() - 1 {
-            true => field_list_str.push_str(field.to_string().as_str()),
-            false => field_list_str.push_str(format!("{},", field.to_string().as_str()).as_str()),
+        if i == field_list.len() - 1 {
+            field_list_str.push_str(field.to_string().as_str());
+        } else {
+            field_list_str.push_str(format!("{},", field.to_string().as_str()).as_str());
         }
     }
     field_list_str
@@ -296,11 +365,8 @@ fn get_attribute_name(field: &Field) -> Option<String> {
     match profugus_attributes.first() {
         Some(attribute) => {
             for token_tree in attribute.tokens.clone() {
-                match token_tree {
-                    TokenTree::Group(group) => {
-                        return Some(group.to_string());
-                    }
-                    _ => {}
+                if let TokenTree::Group(group) = token_tree {
+                    return Some(group.to_string());
                 }
             }
             None
@@ -320,9 +386,10 @@ fn generate_argument_list_with_types(fields: Vec<StructField>) -> String {
     let mut prepared_arguments_list = String::new();
     for (i, field) in fields.iter().enumerate() {
         let pg_type = get_postgres_datatype(field.field_type.to_string());
-        match i == (fields.len() - 1) {
-            true => prepared_arguments_list.push_str(format!("${}::{}", i + 1, pg_type).as_str()),
-            false => prepared_arguments_list.push_str(format!("${}::{},", i + 1, pg_type).as_str()),
+        if i == (fields.len() - 1) {
+            prepared_arguments_list.push_str(format!("${}::{}", i + 1, pg_type).as_str());
+        } else {
+            prepared_arguments_list.push_str(format!("${}::{},", i + 1, pg_type).as_str());
         }
     }
     prepared_arguments_list
