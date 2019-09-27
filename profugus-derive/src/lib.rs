@@ -5,7 +5,8 @@ use proc_macro2::{Ident, Literal, Span, TokenTree};
 use quote::quote;
 use syn::export::TokenStream2;
 use syn::Type::Path;
-use syn::{parse_macro_input, Attribute, Data::Struct, DeriveInput, Field, Type};
+use syn::{parse_macro_input, Attribute, Data::Struct, DeriveInput, Field, Type, GenericArgument};
+use syn::PathArguments::AngleBracketed;
 
 #[derive(Debug)]
 struct SqlField {
@@ -350,10 +351,22 @@ fn generate_field_list(field_list: &[TokenStream2]) -> String {
 }
 
 fn get_ident_name_from_path(path: &Type) -> Ident {
-    //TODO: add support for all types.
     match path {
-        Path(path) => path.path.get_ident().unwrap().clone(),
-        _ => panic!("not found a path"),
+        Path(path) => match path.path.get_ident(){
+            Some(ident) => ident.clone(),
+            None => {
+                // Handle generic types like Option<T>.
+                if let Some(path_segement) = &path.path.segments.first() {
+                    if let AngleBracketed(arguments) = &path_segement.arguments {
+                        if let Some(GenericArgument::Type(generic_type)) = arguments.args.first() {
+                            return get_ident_name_from_path(generic_type);
+                        }
+                    }
+                }
+                panic!("Could not infer type information of your struct")
+            }
+
+        }     _ => panic!("not found a path"),
     }
 }
 
@@ -408,6 +421,8 @@ fn get_postgres_datatype(rust_type: String) -> String {
         "f32" => String::from("REAL"),
         "f64" => String::from("DOUBLE PRECISION"),
         "String" => String::from("VARCHAR"),
+        "NaiveTime" => String::from("TIME"),
+        "NaiveDate" => String::from("DATE"),
         _ => panic!("unsupported type"),
     }
 }

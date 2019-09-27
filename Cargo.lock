@@ -90,6 +90,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b486ce3ccf7ffd79fdeb678eac06a9e6c09fc88d33836340becb8fffe87c5e33"
 
 [[package]]
+name = "chrono"
+version = "0.4.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e8493056968583b0193c1bb04d6f7684586f3726992d6c573261941a895dbd68"
+dependencies = [
+ "libc",
+ "num-integer",
+ "num-traits",
+ "time",
+]
+
+[[package]]
 name = "cloudabi"
 version = "0.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -478,6 +490,25 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2f9667ddcc6cc8a43afc9b7917599d7216aa09c463919ea32c59ed6cac8bc945"
 
 [[package]]
+name = "num-integer"
+version = "0.1.41"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b85e541ef8255f6cf42bbfe4ef361305c6c135d10919ecc26126c4e5ae94bc09"
+dependencies = [
+ "autocfg",
+ "num-traits",
+]
+
+[[package]]
+name = "num-traits"
+version = "0.2.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6ba9a427cfca2be13aa6f6403b0b7e7368fe982bfa16fccc450ce74c46cd9b32"
+dependencies = [
+ "autocfg",
+]
+
+[[package]]
 name = "num_cpus"
 version = "1.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -672,6 +703,7 @@ dependencies = [
 name = "profugus-test"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "futures-preview",
  "futures-util-preview",
  "postgres-derive",
@@ -990,6 +1022,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "time"
+version = "0.1.42"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "db8dcfca086c1143c9270ac42a2bbd8a7ee477b78ac8e45b19abfb0cbede4b6f"
+dependencies = [
+ "libc",
+ "redox_syscall",
+ "winapi 0.3.7",
+]
+
+[[package]]
 name = "tokio"
 version = "0.2.0-alpha.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1113,6 +1156,7 @@ version = "0.4.0-rc.3"
 source = "git+https://github.com/sfackler/rust-postgres.git#a8d945c70ea6ddb6303d457f37a2de00ef6e8d80"
 dependencies = [
  "bytes",
+ "chrono",
  "fallible-iterator",
  "futures-preview",
  "lazy_static",
