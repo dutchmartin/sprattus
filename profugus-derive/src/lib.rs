@@ -4,9 +4,9 @@ use proc_macro2::TokenTree::{Group, Ident as Ident2, Punct};
 use proc_macro2::{Ident, Literal, Span, TokenTree};
 use quote::quote;
 use syn::export::TokenStream2;
-use syn::Type::Path;
-use syn::{parse_macro_input, Attribute, Data::Struct, DeriveInput, Field, Type, GenericArgument};
 use syn::PathArguments::AngleBracketed;
+use syn::Type::Path;
+use syn::{parse_macro_input, Attribute, Data::Struct, DeriveInput, Field, GenericArgument, Type};
 
 #[derive(Debug)]
 struct SqlField {
@@ -22,56 +22,58 @@ pub fn from_sql(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let name = &input.ident;
     let mut fields: Vec<SqlField> = Vec::new();
 
-    match input.data {
-        Struct(data) => {
-            for field in data.fields {
-                'attribute_loop: for attr in field.attrs {
-                    if let Some(ident) = attr.path.segments.first() {
-                        if ident.ident.eq("profugus") {
-                            // Attr is ours, let's parse it.
-                            for tokens in attr.tokens.into_iter() {
-                                let group = match tokens {
-                                    Group(group) => group,
-                                    _ => panic!("cannot find a group of tokens to parse"),
-                                };
-                                let (key, value) = get_key_value_of_attribute(group);
-                                match &field.ident {
-                                    Some(ident) => {
-                                        // Validate if the rename attribute is used.
-                                        if !key.eq("name") {
-                                            fields.push(SqlField {
-                                                rust_name: ident.clone(),
-                                                sql_name: Literal::string(
-                                                    ident.to_string().as_str(),
-                                                ),
-                                            });
-                                            break 'attribute_loop;
-                                        } else {
-                                            let sql_name = match value {
-                                                None => Literal::string(ident.to_string().as_str()),
-                                                Some(sql_value) => sql_value,
-                                            };
-                                            fields.push(SqlField {
-                                                rust_name: ident.clone(),
-                                                sql_name,
-                                            });
-                                        }
+    if let Struct(data) = input.data {
+        'field_loop: for field in data.fields {
+            'attribute_loop: for attr in field.attrs {
+                if let Some(ident) = attr.path.segments.first() {
+                    if ident.ident.eq("profugus") {
+                        // Attr is ours, let's parse it.
+                        for tokens in attr.tokens.into_iter() {
+                            let group = match tokens {
+                                Group(group) => group,
+                                _ => panic!("cannot find a group of tokens to parse"),
+                            };
+                            let (key, value) = get_key_value_of_attribute(group);
+                            match &field.ident {
+                                Some(ident) => {
+                                    // Validate if the rename attribute is used.
+                                    if key.eq("name") {
+                                        let sql_name = match value {
+                                            None => Literal::string(ident.to_string().as_str()),
+                                            Some(sql_value) => sql_value,
+                                        };
+                                        fields.push(SqlField {
+                                            rust_name: ident.clone(),
+                                            sql_name,
+                                        });
+                                        continue 'field_loop;
+                                    } else {
+                                        continue 'attribute_loop;
                                     }
-                                    _ => panic!("Cannot implement FromSql on a tuple struct"),
                                 }
+                                _ => panic!("Cannot implement FromSql on a tuple struct"),
                             }
-                        } else {
-                            continue;
                         }
+                    } else {
+                        continue 'attribute_loop;
                     }
                 }
             }
+            if let Some(ident) = &field.ident {
+                let name = &ident.to_string();
+                fields.push(SqlField {
+                    rust_name: ident.clone(),
+                    sql_name: Literal::string(name.as_str()),
+                });
+                continue 'field_loop;
+            }
         }
-        _ => panic!(format!(
+    } else {
+        panic!(format!(
             "Deriving on {}, which is not a struct, is not supported",
             name.to_string()
-        )),
-    };
+        ))
+    }
 
     // Build the lines for constructing the struct.
     let mut struct_lines: Vec<TokenStream2> = Vec::new();
@@ -352,7 +354,7 @@ fn generate_field_list(field_list: &[TokenStream2]) -> String {
 
 fn get_ident_name_from_path(path: &Type) -> Ident {
     match path {
-        Path(path) => match path.path.get_ident(){
+        Path(path) => match path.path.get_ident() {
             Some(ident) => ident.clone(),
             None => {
                 // Handle generic types like Option<T>.
@@ -365,8 +367,8 @@ fn get_ident_name_from_path(path: &Type) -> Ident {
                 }
                 panic!("Could not infer type information of your struct")
             }
-
-        }     _ => panic!("not found a path"),
+        },
+        _ => panic!("not found a path"),
     }
 }
 

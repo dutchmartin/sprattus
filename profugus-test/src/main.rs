@@ -1,5 +1,5 @@
+use chrono::*;
 use profugus::*;
-use chrono::NaiveDate;
 
 #[derive(FromSql, ToSql, Eq, PartialEq, Debug)]
 #[profugus(table_name = "reorder")]
@@ -13,7 +13,7 @@ struct Reorder {
     date_reordered: Option<NaiveDate>,
     #[profugus(name = "quant_reordered")]
     quantity_reordered: Option<i32>,
-    date_expected: Option<NaiveDate>
+    date_expected: Option<NaiveDate>,
 }
 
 #[tokio::main]
@@ -21,4 +21,5 @@ async fn main() {
     let conn = PGConnection::new("postgresql://localhost/dellstore2?user=tg")
         .await
         .unwrap();
+    
 }

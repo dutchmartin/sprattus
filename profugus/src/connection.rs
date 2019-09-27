@@ -536,8 +536,7 @@ fn generate_prepared_arguments_list_with_types<T>(item_length: usize, no_of_item
 where
     T: ToSql,
 {
-    let mut arguments_list: String =
-        format!("({})", T::get_prepared_arguments_list_with_types());
+    let mut arguments_list: String = format!("({})", T::get_prepared_arguments_list_with_types());
     if no_of_items == 1 {
         return arguments_list;
     }
