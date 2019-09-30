@@ -169,7 +169,7 @@ impl PGConnection {
     ///     assert_eq!(product, Product{ prod_id: 50, title: String::from("ACADEMY BAKED")});
     /// }
     /// ```
-    pub async fn update<T: traits::FromSql + traits::ToSql>(self, item: T) -> Result<T, Error>
+    pub async fn update<T: traits::FromSql + traits::ToSql>(self, item: &T) -> Result<T, Error>
     where
         <T as traits::ToSql>::PK: tokio_postgres::types::ToSql,
     {
@@ -244,7 +244,7 @@ impl PGConnection {
     ///     assert_eq!(product_list, old_products);
     /// }
     /// ```
-    pub async fn update_multiple<T>(self, items: Vec<T>) -> Result<Vec<T>, Error>
+    pub async fn update_multiple<T>(self, items: &Vec<T>) -> Result<Vec<T>, Error>
     where
         T: Sized + ToSql + FromSql,
     {
@@ -321,7 +321,7 @@ impl PGConnection {
     ///
     /// }
     /// ```
-    pub async fn create<T>(self, item: T) -> Result<T, Error>
+    pub async fn create<T>(self, item: &T) -> Result<T, Error>
     where
         T: Sized + ToSql + FromSql,
     {
@@ -373,7 +373,7 @@ impl PGConnection {
     ///     conn.delete(products).await.unwrap();
     /// }
     /// ```
-    pub async fn create_multiple<T>(self, items: Vec<T>) -> Result<Vec<T>, Error>
+    pub async fn create_multiple<T>(self, items: &Vec<T>) -> Result<Vec<T>, Error>
     where
         T: Sized + ToSql + FromSql,
     {
@@ -431,7 +431,7 @@ impl PGConnection {
     ///     conn.delete(product).await.unwrap();
     /// }
     /// ```
-    pub async fn delete<T: traits::FromSql + traits::ToSql>(self, item: T) -> Result<T, Error>
+    pub async fn delete<T: traits::FromSql + traits::ToSql>(self, item: &T) -> Result<T, Error>
     where
         <T as traits::ToSql>::PK: tokio_postgres::types::ToSql + Copy,
     {
@@ -487,7 +487,7 @@ impl PGConnection {
     ///     conn.delete(products).await.unwrap();
     /// }
     /// ```
-    pub async fn delete_multiple<P, T>(self, items: Vec<T>) -> Result<Vec<T>, Error>
+    pub async fn delete_multiple<P, T>(self, items: &Vec<T>) -> Result<Vec<T>, Error>
     where
         P: tokio_postgres::types::ToSql + Copy,
         T: traits::FromSql + traits::ToSql<PK = P>,
