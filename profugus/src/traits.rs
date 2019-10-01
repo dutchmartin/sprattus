@@ -24,7 +24,7 @@ pub trait ToSql {
 
     fn get_primary_key_value(&self) -> Self::PK
     where
-        Self::PK: ToSqlItem + Sized + Copy;
+        Self::PK: ToSqlItem + Sized + Copy + Sync;
 
     ///
     /// The fields that contain the data of the table.
@@ -35,13 +35,13 @@ pub trait ToSql {
     /// Returns a comma separated list of all fields.
     fn get_all_fields() -> &'static str;
 
-    fn get_values_of_all_fields(&self) -> Vec<&dyn ToSqlItem>;
+    fn get_values_of_all_fields(&self) -> Vec<&(dyn ToSqlItem + Sync)>;
 
     ///
     /// The method that implements converting the fields
     /// into a array of items that implement the ToSql trait of rust_postgres.
     ///
-    fn get_query_params(&self) -> Vec<&dyn ToSqlItem>;
+    fn get_query_params(&self) -> Vec<&(dyn ToSqlItem + Sync)>;
 
     ///
     /// Returns the formatted prepared statement list.

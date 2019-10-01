@@ -2,7 +2,7 @@ use chrono::*;
 use profugus::*;
 
 #[derive(FromSql, ToSql, Eq, PartialEq, Debug)]
-#[profugus(table_name = "reorder")]
+#[profugus(table = "reorder")]
 struct Reorder {
     #[profugus(primary_key)]
     #[profugus(name = "prod_id")]
@@ -108,19 +108,19 @@ async fn main() -> Result<(), Error>{
     ];
 
     // Insert test
-    let created_reorders = conn.clone().create_multiple(&reorders).await?;
+    let created_reorders = conn.create_multiple(&reorders).await?;
     assert_eq!(created_reorders, reorders);
 
     // Query test
-    let queried_reorders = conn.clone().query_multiple::<Reorder>("SELECT * FROM reorders WHERE prod_id IN VALUES(1,2,3,4,5)",&[]).await?;
-
+    let queried_reorders = conn.query_multiple::<Reorder>("SELECT * FROM reorders WHERE prod_id IN VALUES(1,2,3,4,5)",&[]).await?;
     assert_eq!(queried_reorders, reorders);
 
     // Update test
-    let updated_reorders = conn.clone().update_multiple(&reorders_update).await?;
+    let updated_reorders = conn.update_multiple(&reorders_update).await?;
     assert_eq!(updated_reorders, reorders_update);
 
-    let deleted_reorders = conn.clone().delete_multiple(&reorders_update).await?;
+    // Delete test
+    let deleted_reorders = conn.delete_multiple(&reorders_update).await?;
     assert_eq!(deleted_reorders, reorders_update);
 
     Ok(())

@@ -74,9 +74,9 @@ impl PGConnection {
     /// }
     /// ```
     pub async fn query_multiple<T>(
-        self,
+        &self,
         sql: &str,
-        args: &[&dyn ToSqlItem],
+        args: &[&(dyn ToSqlItem + Sync)],
     ) -> Result<Vec<T>, Error>
     where
         T: FromSql,
@@ -88,9 +88,9 @@ impl PGConnection {
     }
     //TODO: comments for explaination.
     pub async fn query_multiple_stream<T>(
-        self,
+        &self,
         sql: &str,
-        args: &[&dyn ToSqlItem],
+        args: &[&(dyn ToSqlItem + Sync)],
     ) -> Result<impl Stream<Item = Result<T, Error>>, Error>
     where
         T: FromSql,
@@ -127,7 +127,7 @@ impl PGConnection {
     ///     assert_eq!(product, Product{ prod_id: 1, title: String::from("ACADEMY ACADEMY")});
     /// }
     /// ```
-    pub async fn query<T>(self, sql: &str, args: &[&dyn ToSqlItem]) -> Result<T, Error>
+    pub async fn query<T>(&self, sql: &str, args: &[&(dyn ToSqlItem + Sync)]) -> Result<T, Error>
     where
         T: FromSql,
     {
@@ -169,7 +169,7 @@ impl PGConnection {
     ///     assert_eq!(product, Product{ prod_id: 50, title: String::from("ACADEMY BAKED")});
     /// }
     /// ```
-    pub async fn update<T: traits::FromSql + traits::ToSql>(self, item: &T) -> Result<T, Error>
+    pub async fn update<T: traits::FromSql + traits::ToSql>(&self, item: &T) -> Result<T, Error>
     where
         <T as traits::ToSql>::PK: tokio_postgres::types::ToSql,
     {
@@ -193,7 +193,7 @@ impl PGConnection {
         let result = {
             self.client
                 .lock()
-                .query(&insert, &item.get_values_of_all_fields())
+                .query(&insert, item.get_values_of_all_fields().as_slice())
         };
         let mut boxed_fut = result.boxed();
         let mut pinned_fut = Pin::new(&mut boxed_fut);
@@ -244,7 +244,7 @@ impl PGConnection {
     ///     assert_eq!(product_list, old_products);
     /// }
     /// ```
-    pub async fn update_multiple<T>(self, items: &Vec<T>) -> Result<Vec<T>, Error>
+    pub async fn update_multiple<T>(&self, items: &Vec<T>) -> Result<Vec<T>, Error>
     where
         T: Sized + ToSql + FromSql,
     {
@@ -275,13 +275,13 @@ impl PGConnection {
         let sql = strfmt(sql_template, &sql_vars).unwrap();
         let insert = self.client.lock().prepare(&sql);
         let insert = insert.await?;
-        let params: Vec<&dyn ToSqlItem> = items
+        let params: Vec<&(dyn ToSqlItem + Sync)> = items
             .iter()
             .map(|item| item.get_values_of_all_fields())
             .flatten()
             .collect();
 
-        let result = { self.client.lock().query(&insert, &params) };
+        let result = { self.client.lock().query(&insert, params.as_slice()) };
         Ok(result
             .map(|row_result| -> Result<T, Error> {
                 match row_result {
@@ -298,7 +298,6 @@ impl PGConnection {
     ///
     /// Example:
     /// ```
-    /// #![feature(custom_attribute)]
     /// use profugus::PGConnection;
     /// use tokio::prelude::*;
     /// use profugus::FromSql;
@@ -321,7 +320,7 @@ impl PGConnection {
     ///
     /// }
     /// ```
-    pub async fn create<T>(self, item: &T) -> Result<T, Error>
+    pub async fn create<T>(&self, item: &T) -> Result<T, Error>
     where
         T: Sized + ToSql + FromSql,
     {
@@ -334,7 +333,7 @@ impl PGConnection {
         let insert = self.client.lock().prepare(sql.as_str());
         let insert = insert.await?;
 
-        let result = { self.client.lock().query(&insert, &item.get_query_params()) };
+        let result = { self.client.lock().query(&insert, item.get_query_params().as_slice()) };
         let mut boxed_fut = result.boxed();
         let mut pinned_fut = Pin::new(&mut boxed_fut);
         pinned_fut
@@ -373,7 +372,7 @@ impl PGConnection {
     ///     conn.delete(products).await.unwrap();
     /// }
     /// ```
-    pub async fn create_multiple<T>(self, items: &Vec<T>) -> Result<Vec<T>, Error>
+    pub async fn create_multiple<T>(&self, items: &Vec<T>) -> Result<Vec<T>, Error>
     where
         T: Sized + ToSql + FromSql,
     {
@@ -387,12 +386,12 @@ impl PGConnection {
         let insert = self.client.lock().prepare(sql.as_str());
         let insert = insert.await?;
 
-        let params: Vec<&dyn ToSqlItem> = items
+        let params: Vec<&(dyn ToSqlItem + Sync)> = items
             .iter()
             .map(|item| item.get_query_params())
             .flatten()
             .collect();
-        let result = { self.client.lock().query(&insert, &params) };
+        let result = { self.client.lock().query(&insert, params.as_slice()) };
         Ok(result
             .map(|row_result| -> Result<T, Error> {
                 match row_result {
@@ -431,9 +430,9 @@ impl PGConnection {
     ///     conn.delete(product).await.unwrap();
     /// }
     /// ```
-    pub async fn delete<T: traits::FromSql + traits::ToSql>(self, item: &T) -> Result<T, Error>
+    pub async fn delete<T: traits::FromSql + traits::ToSql>(&self, item: &T) -> Result<T, Error>
     where
-        <T as traits::ToSql>::PK: tokio_postgres::types::ToSql + Copy,
+        <T as traits::ToSql>::PK: tokio_postgres::types::ToSql + Copy + Sync,
     {
         let sql = format!(
             "DELETE FROM {table_name} WHERE {primary_key} IN ($1) RETURNING *",
@@ -487,11 +486,11 @@ impl PGConnection {
     ///     conn.delete(products).await.unwrap();
     /// }
     /// ```
-    pub async fn delete_multiple<P, T>(self, items: &Vec<T>) -> Result<Vec<T>, Error>
+    pub async fn delete_multiple<P, T>(&self, items: &Vec<T>) -> Result<Vec<T>, Error>
     where
         P: tokio_postgres::types::ToSql + Copy,
         T: traits::FromSql + traits::ToSql<PK = P>,
-        <T as traits::ToSql>::PK: Copy,
+        <T as traits::ToSql>::PK: Copy + Sync,
     {
         let sql = format!(
             "DELETE FROM {table_name} WHERE {primary_key} IN ({argument_list}) RETURNING *",
@@ -507,7 +506,7 @@ impl PGConnection {
             .collect();
         let p = params
             .iter()
-            .map(|i| i as &dyn tokio_postgres::types::ToSql)
+            .map(|i| i as &(dyn tokio_postgres::types::ToSql + Sync))
             .collect::<Vec<_>>();
         let result = { self.client.lock().query(&insert, p.as_slice()) };
         Ok(result

@@ -225,7 +225,7 @@ fn build_to_sql_impl(
             #[inline]
             fn get_primary_key_value(&self) -> Self::PK
             where
-                Self::PK: ToSqlItem + Sized + Copy
+                Self::PK: ToSqlItem + Sized + Copy + Sync
             {
                 self.#primary_key
             }
@@ -241,12 +241,12 @@ fn build_to_sql_impl(
             }
 
             #[inline]
-            fn get_values_of_all_fields(&self) -> Vec<&dyn ToSqlItem> {
+            fn get_values_of_all_fields(&self) -> Vec<&(dyn ToSqlItem + Sync)> {
                 vec![&self.#primary_key,#(&self.#field_list),*]
             }
 
             #[inline]
-            fn get_query_params(&self) -> Vec<&dyn ToSqlItem> {
+            fn get_query_params(&self) -> Vec<&(dyn ToSqlItem + Sync)> {
                 vec![#(&self.#field_list),*]
             }
 
@@ -270,6 +270,7 @@ fn build_to_sql_impl(
 }
 #[allow(clippy::unnecessary_operation)]
 fn get_table_name_from_attributes(attributes: Vec<Attribute>) -> Option<String> {
+
     for attribute in attributes {
         match attribute.path.segments.first() {
             Some(segment) => {
@@ -295,7 +296,7 @@ fn get_table_name_from_attributes(attributes: Vec<Attribute>) -> Option<String> 
                                 }
                             }
                             TokenTree::Literal(literal) => {
-                                Some(literal.to_string().replace("\"", ""));
+                                return Some(literal.to_string().replace("\"", ""));
                             }
                             _ => break 'table_name_search,
                         }
