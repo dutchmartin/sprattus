@@ -333,7 +333,11 @@ impl PGConnection {
         let insert = self.client.lock().prepare(sql.as_str());
         let insert = insert.await?;
 
-        let result = { self.client.lock().query(&insert, item.get_query_params().as_slice()) };
+        let result = {
+            self.client
+                .lock()
+                .query(&insert, item.get_query_params().as_slice())
+        };
         let mut boxed_fut = result.boxed();
         let mut pinned_fut = Pin::new(&mut boxed_fut);
         pinned_fut
