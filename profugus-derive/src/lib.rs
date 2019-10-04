@@ -3,7 +3,7 @@ extern crate proc_macro;
 use crate::KeyType::{NoKey, PrimaryKey, PrimaryKeyCandidate};
 use proc_macro2::TokenTree::{Group, Ident as Ident2, Punct};
 use proc_macro2::{Ident, Literal, Span, TokenStream, TokenTree};
-use quote::{quote, TokenStreamExt};
+use quote::quote;
 use syn::export::TokenStream2;
 use syn::PathArguments::AngleBracketed;
 use syn::Type::Path;
@@ -99,11 +99,6 @@ pub fn from_sql(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     expanded.into()
 }
 
-struct StructField {
-    pub attribute: Option<String>,
-    pub name: Ident,
-    pub field_type: Ident,
-}
 #[derive(Debug, Eq, PartialEq)]
 enum KeyType {
     PrimaryKey,
@@ -111,7 +106,6 @@ enum KeyType {
     NoKey,
 }
 
-#[derive(Debug)]
 enum StructName {
     Renamed { original: Ident, new: Literal },
     Named { name: Ident },
@@ -120,7 +114,7 @@ enum StructName {
 impl quote::ToTokens for StructName {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         match &self {
-            StructName::Renamed { original, new } => {
+            StructName::Renamed { original, new: _ } => {
                 let n = original.clone();
                 tokens.extend(quote!(#n));
             }
@@ -134,14 +128,12 @@ impl quote::ToTokens for StructName {
 impl ToString for StructName {
     fn to_string(&self) -> String {
         match self {
-            StructName::Renamed { original, new } => new.to_string(),
+            StructName::Renamed { original: _, new } => new.to_string(),
             StructName::Named { name } => name.to_string(),
         }
     }
 }
 
-// This is the new format to parse in to.
-#[derive(Debug)]
 struct StructFieldData {
     pub name: StructName,
     pub key_type: KeyType,
@@ -410,25 +402,6 @@ fn get_ident_name_from_path(path: &Type) -> Ident {
     }
 }
 
-fn get_attribute_name(field: &Field) -> Option<String> {
-    let profugus_attributes: Vec<&Attribute> = field
-        .attrs
-        .iter()
-        .filter(|attribute| is_profugus_attribute(attribute))
-        .collect();
-    match profugus_attributes.first() {
-        Some(attribute) => {
-            for token_tree in attribute.tokens.clone() {
-                if let TokenTree::Group(group) = token_tree {
-                    return Some(group.to_string());
-                }
-            }
-            None
-        }
-        _ => None,
-    }
-}
-
 fn is_profugus_attribute(attribute: &Attribute) -> bool {
     match attribute.path.get_ident() {
         Some(name) => name.eq("profugus"),
@@ -480,7 +453,7 @@ fn find_key_type(field: &Field) -> KeyType {
         for token in attribute.tokens {
             match token {
                 Group(group) => match get_key_value_of_attribute(group) {
-                    (ident, Some(name)) => {
+                    (ident, Some(_name)) => {
                         if ident.to_string().eq("primary_key") {
                             return PrimaryKey;
                         }

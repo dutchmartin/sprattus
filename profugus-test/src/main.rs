@@ -1,6 +1,8 @@
 use chrono::*;
 use profugus::*;
 
+mod keywords;
+
 #[derive(FromSql, ToSql, Eq, PartialEq, Debug)]
 #[profugus(table = "reorder")]
 struct Reorder {
