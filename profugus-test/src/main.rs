@@ -1,5 +1,6 @@
 use chrono::*;
 use profugus::*;
+use crate::keywords::test_if_keywords_are_escaped;
 
 mod keywords;
 
@@ -20,19 +21,22 @@ struct Reorder {
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-    println!("Starting Tests...\n");
+    println!(" Starting Tests...\n");
     let conn = PGConnection::new("postgresql://localhost/dellstore2?user=tg")
         .await
         .unwrap();
 
-    conn.batch_execute("DROP TABLE IF EXISTS reorder;
+    conn.batch_execute(
+        "DROP TABLE IF EXISTS reorder;
     CREATE TABLE reorder (
 	prod_id serial NOT NULL,
 	date_low date NOT NULL,
 	quan_low int4 NOT NULL,
 	date_reordered date NULL,
 	quan_reordered int4 NULL,
-	date_expected date NULL);").await?;
+	date_expected date NULL);",
+    )
+    .await?;
 
     let reorders = vec![
         Reorder {
@@ -126,10 +130,7 @@ async fn main() -> Result<(), Error> {
 
     // Query test
     let queried_reorders = conn
-        .query_multiple::<Reorder>(
-            "SELECT * FROM reorder WHERE prod_id IN (1,2,3,4,5)",
-            &[],
-        )
+        .query_multiple::<Reorder>("SELECT * FROM reorder WHERE prod_id IN (1,2,3,4,5)", &[])
         .await?;
     assert_eq!(queried_reorders, reorders);
     println!("Query succeeded");
@@ -144,5 +145,8 @@ async fn main() -> Result<(), Error> {
     assert_eq!(deleted_reorders, reorders_update);
     println!("Delete succeeded");
 
+    test_if_keywords_are_escaped(conn).await?;
+
+    print!("\n Done!\n");
     Ok(())
 }
