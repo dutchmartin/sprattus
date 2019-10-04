@@ -37,14 +37,40 @@ impl PGConnection {
             client: Arc::new(Mutex::new(client)),
         })
     }
+    /// Executes a statement, returning the number of rows modified.
+    ///
+    /// If the statement does not modify any rows (e.g. `SELECT`), 0 is returned.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the number of parameters provided does not match the number expected.
+    pub async fn execute(&self, sql: &str, args: &[&(dyn ToSqlItem + Sync)]) -> Result<u64, Error> {
+        let statement = self.client.lock().prepare(sql).await?;
+        let result = { self.client.lock().execute(&statement, args) };
+        result.await
+    }
+
+    /// Executes a sequence of SQL statements using the simple query protocol.
+    ///
+    /// Statements should be separated by semicolons. If an error occurs, execution of the sequence will stop at that
+    /// point. This is intended for use when, for example, initializing a database schema.
+    ///
+    /// # Warning
+    ///
+    /// Prepared statements should be use for any query which contains user-specified data, as they provided the
+    /// functionality to safely embed that data in the request. Do not form statements via string concatenation and pass
+    /// them to this method!
+    pub async fn batch_execute(&self, sql: &str) -> Result<(), Error> {
+        let result = { self.client.lock().batch_execute(&sql) };
+        result.await
+    }
 
     ///
     /// Query multiple rows of a table.
     ///
     /// Example:
     /// ```
-    /// use profugus::PGConnection;
-    /// use profugus::FromSql;
+    /// use profugus::{ PGConnection, FromSql };
     /// use tokio::prelude::*;
     ///
     /// #[derive(FromSql, Eq, PartialEq, Debug)]
@@ -264,7 +290,7 @@ impl PGConnection {
             T::get_argument_count() + 1,
             items.len(),
         );
-        let inner_fields = T::get_fields().replace(",", ",temp_table");
+        let inner_fields = T::get_fields().replace(",", ",temp_table.");
         let mut sql_vars = HashMap::with_capacity(12);
         sql_vars.insert(String::from("table_name"), T::get_table_name());
         sql_vars.insert(String::from("inner_fields"), inner_fields.as_str());

@@ -212,7 +212,7 @@ fn build_to_sql_implementation(
         .unwrap_or_else(|| {
             panic!("no field field with the 'primary_key' attribute found");
         });
-
+    let primary_key_string = primary_key.to_string();
     let arguments_list_with_types = generate_argument_list_with_types(&field_list);
 
     let non_pk_field_list: Vec<&StructName> = field_list
@@ -236,7 +236,6 @@ fn build_to_sql_implementation(
             .collect::<Vec<String>>()
             .as_slice(),
     );
-
     let field_list_len = non_pk_field_list.len();
     let prepared_arguments_list = generate_argument_list(field_list_len);
 
@@ -250,7 +249,7 @@ fn build_to_sql_implementation(
 
             #[inline]
             fn get_primary_key() -> &'static str {
-                stringify!(#primary_key)
+                #primary_key_string
             }
 
             type PK = #primary_key_type;
