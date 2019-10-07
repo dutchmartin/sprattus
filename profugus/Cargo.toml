@@ -6,7 +6,7 @@ edition = "2018"
 
 [dependencies]
 # todo: Add optional support for all feature flags of tokio-postgres
-tokio-postgres = { git= "https://github.com/sfackler/rust-postgres.git", branch = "master", features = ["with-chrono-0_4"] }
+tokio-postgres = { git = "https://github.com/sfackler/rust-postgres.git", branch = "master", features = ["default"]}
 tokio = "^0.2.0-alpha.6"
 futures-preview = { version = "^0.3.0-alpha.19", features = ["async-await"] }
 futures-util-preview = { version = "^0.3.0-alpha.19" }
@@ -15,3 +15,11 @@ strfmt = "0.1.6"
 
 
 profugus-derive = { version = "*", path = "../profugus-derive" }
+
+[features]
+"with-bit-vec-0_6" = ["tokio-postgres/with-bit-vec-0_6"]
+"with-chrono-0_4" = ["tokio-postgres/with-chrono-0_4"]
+"with-eui48-0_4" = ["tokio-postgres/with-eui48-0_4"]
+"with-geo-types-0_4" = ["tokio-postgres/with-geo-types-0_4"]
+"with-serde_json-1" = ["tokio-postgres/with-serde_json-1"]
+"with-uuid-0_7" = ["tokio-postgres/with-uuid-0_7"]
