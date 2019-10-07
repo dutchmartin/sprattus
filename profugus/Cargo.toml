@@ -3,9 +3,9 @@ name = "profugus"
 version = "0.1.0"
 authors = ["Martijn <martijn@tweedegolf.nl>"]
 edition = "2018"
+readme = "../README.MD"
 
 [dependencies]
-# todo: Add optional support for all feature flags of tokio-postgres
 tokio-postgres = { git = "https://github.com/sfackler/rust-postgres.git", branch = "master", features = ["default"]}
 tokio = "^0.2.0-alpha.6"
 futures-preview = { version = "^0.3.0-alpha.19", features = ["async-await"] }

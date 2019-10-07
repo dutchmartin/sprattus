@@ -7,7 +7,7 @@
 //! profugus = "0.1"
 //! ```
 //! Create a table in Postgres:
-//! ```postgresql
+//! ```sql
 //! CREATE TABLE fruits(
 //!    id SERIAL PRIMARY KEY,
 //!    name VARCHAR NOT NULL
@@ -49,7 +49,7 @@
 //! 
 //! #[tokio::main]
 //! async fn main() -> Result<(), Error>{
-//!     let conn = PGConnection::new("postgresql://! localhost/dellstore2?user=tg").await.unwrap();
+//!     let conn = PGConnection::new("postgresql://! localhost/dellstore2?user=tg").await?;
 //!     let fruit = Fruit{
 //!         id: 0,
 //!         name: String::from("apple")

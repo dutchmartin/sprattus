@@ -11,6 +11,9 @@ use strfmt::strfmt;
 use tokio;
 use tokio_postgres::*;
 
+/// Client for Postgres database manipulation.
+///
+///
 #[derive(Clone)]
 pub struct PGConnection {
     client: Arc<Mutex<Client>>,
@@ -24,7 +27,7 @@ impl PGConnection {
     /// ```
     /// use profugus::*;
     ///
-    /// let conn = PGConnection::new("postgresql://localhost/dellstore2?user=tg");
+    /// let conn = PGConnection::new("postgresql://localhost/dellstore2?user=tg").await?;
     /// ```
     pub async fn new(connection_string: &str) -> Result<PGConnection, Error> {
         let (client, connection) = tokio_postgres::connect(connection_string, NoTls).await?;
