@@ -13,7 +13,7 @@ use syn::export::TokenStream2;
 use syn::{parse_macro_input, Data::Struct, DeriveInput};
 
 
-/// Automatically implements the `ToSql` trait for a given struct.
+/// Automatically implements the [`ToSql`](./trait.ToSql.html) trait for a given struct.
 #[proc_macro_derive(ToSql, attributes(profugus))]
 pub fn to_sql(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let derive_input = parse_macro_input!(input as DeriveInput);
@@ -58,7 +58,7 @@ pub fn to_sql(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     build_to_sql_implementation(&name, table_name, &mut fields_info)
 }
 
-/// Automatically implements the `FromSql` trait for a given struct.
+/// Automatically implements the [`FromSql`](./trait.FromSql.html) trait for a given struct.
 #[proc_macro_derive(FromSql, attributes(profugus))]
 pub fn from_sql(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
