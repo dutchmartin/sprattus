@@ -462,7 +462,7 @@ impl PGConnection {
     /// ```
     pub async fn delete<T: traits::FromSql + traits::ToSql>(&self, item: &T) -> Result<T, Error>
     where
-        <T as traits::ToSql>::PK: tokio_postgres::types::ToSql + Copy + Sync,
+        <T as traits::ToSql>::PK: tokio_postgres::types::ToSql + Sync,
     {
         let sql = format!(
             "DELETE FROM {table_name} WHERE {primary_key} IN ($1) RETURNING *",
@@ -518,9 +518,9 @@ impl PGConnection {
     /// ```
     pub async fn delete_multiple<P, T>(&self, items: &Vec<T>) -> Result<Vec<T>, Error>
     where
-        P: tokio_postgres::types::ToSql + Copy,
+        P: tokio_postgres::types::ToSql,
         T: traits::FromSql + traits::ToSql<PK = P>,
-        <T as traits::ToSql>::PK: Copy + Sync,
+        <T as traits::ToSql>::PK: Sync,
     {
         let sql = format!(
             "DELETE FROM {table_name} WHERE {primary_key} IN ({argument_list}) RETURNING *",

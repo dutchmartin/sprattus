@@ -249,7 +249,7 @@ fn build_to_sql_implementation(
             #[inline]
             fn get_primary_key_value(&self) -> Self::PK
             where
-                Self::PK: ToSqlItem + Sized + Copy + Sync
+                Self::PK: ToSqlItem + Sized + Sync
             {
                 self.#primary_key
             }
