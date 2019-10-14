@@ -1,7 +1,7 @@
 [package]
 name = "profugus"
-version = "0.1.0"
-authors = ["Martijn <martijn@tweedegolf.nl>"]
+version = "0.0.1"
+authors = ["Martijn Groeneveldt <martijn.groeneveldt@gmail.com>"]
 edition = "2018"
 readme = "../README.MD"
 

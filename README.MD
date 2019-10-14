@@ -8,10 +8,10 @@ profugus is a crate that let's you easily do async CRUD operations on your Postg
 
 Add profugus to your cargo.toml:  
 ```toml
-profugus = "0.1"
+profugus = "0.0.1"
 ```
 Create a table in Postgres:
-```postgresql
+```sql
 CREATE TABLE fruits(
    id SERIAL PRIMARY KEY,
    name VARCHAR NOT NULL
