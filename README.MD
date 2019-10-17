@@ -30,9 +30,9 @@ And finally add the profugus macro's and annotations:
 use profugus::*;
 
 #[derive(ToSql, FromSql, Debug)]
-#[profugus(table = "fruits")]
+#[sql(table = "fruits")]
 struct Fruit {
-    #[profugus(primary_key)]
+    #[sql(primary_key)]
     id: i32,
     name: String
 }
@@ -44,9 +44,9 @@ use tokio::prelude::*;
 use profugus::*;
 
 #[derive(ToSql, FromSql)]
-#[profugus(table = "fruits")]
+#[sql(table = "fruits")]
 struct Fruit {
-    #[profugus(primary_key)]
+    #[sql(primary_key)]
     id: i32,
     name: String
 }
