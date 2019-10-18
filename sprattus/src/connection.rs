@@ -48,9 +48,8 @@ impl Connection {
     ///
     /// Panics if the number of parameters provided does not match the number expected.
     pub async fn execute(&self, sql: &str, args: &[&(dyn ToSqlItem + Sync)]) -> Result<u64, Error> {
-        let statement = self.client.lock().prepare(sql).await?;
-        let result = { self.client.lock().execute(&statement, args) };
-        result.await
+        let client = self.client.lock();
+        client.execute(sql, args).await
     }
 
     /// Executes a sequence of SQL statements using the simple query protocol.
@@ -64,7 +63,8 @@ impl Connection {
     /// functionality to safely embed that data in the request. Do not form statements via string concatenation and pass
     /// them to this method!
     pub async fn batch_execute(&self, sql: &str) -> Result<(), Error> {
-        let result = { self.client.lock().batch_execute(&sql) };
+        let client = self.client.lock();
+        let result = { client.batch_execute(&sql) };
         result.await
     }
 
@@ -110,28 +110,14 @@ impl Connection {
     where
         T: FromSql,
     {
-        self.query_multiple_stream(sql, args)
-            .await?
-            .try_collect::<Vec<T>>()
-            .await
-    }
-    //TODO: comments for explaination.
-    pub async fn query_multiple_stream<T>(
-        &self,
-        sql: &str,
-        args: &[&(dyn ToSqlItem + Sync)],
-    ) -> Result<impl Stream<Item = Result<T, Error>>, Error>
-    where
-        T: FromSql,
-    {
-        let statement = self.client.lock().prepare(sql).await?;
-        let result = { self.client.lock().query(&statement, args) };
-        Ok(result.map(|row_result| -> Result<T, Error> {
-            match row_result {
-                Ok(row) => T::from_row(&row),
-                Err(e) => Err(e),
-            }
-        }))
+        self.client
+            .lock()
+            .query(sql, args)
+            .map(|rows| rows?
+                .iter()
+                .map(|row| T::from_row(row))
+                .collect()
+            ).await
     }
 
     ///
@@ -160,12 +146,8 @@ impl Connection {
     where
         T: FromSql,
     {
-        let mut boxed_future = self.query_multiple_stream(sql, args).await?.boxed();
-        let mut pinned_fut = Pin::new(&mut boxed_future);
-        Ok(pinned_fut
-            .try_next()
-            .await?
-            .expect("expected at least one item"))
+        let client = self.client.lock();
+        T::from_row(&client.query_one(sql, args).await?)
     }
 
     ///
@@ -216,20 +198,9 @@ impl Connection {
             generate_single_prepared_arguments_list(2, T::get_argument_count() + 1);
         sql_vars.insert(String::from("prepared_values"), prepared_values.as_ref());
         let sql = strfmt(sql_template, &sql_vars).unwrap();
+        let client = self.client.lock();
 
-        let insert = self.client.lock().prepare(&sql);
-        let insert = insert.await?;
-        let result = {
-            self.client
-                .lock()
-                .query(&insert, item.get_values_of_all_fields().as_slice())
-        };
-        let mut boxed_fut = result.boxed();
-        let mut pinned_fut = Pin::new(&mut boxed_fut);
-        pinned_fut
-            .try_next()
-            .map_ok(|row| T::from_row(&row.expect("At least it should return one row")))
-            .await?
+        T::from_row(&client.query_one(sql.as_str(), item.get_values_of_all_fields().as_slice()).await?)
     }
 
     ///
@@ -302,24 +273,19 @@ impl Connection {
         sql_vars.insert(String::from("all_fields"), T::get_all_fields());
         sql_vars.insert(String::from("prepared_placeholders"), placeholders.as_str());
         let sql = strfmt(sql_template, &sql_vars).unwrap();
-        let insert = self.client.lock().prepare(&sql);
-        let insert = insert.await?;
         let params: Vec<&(dyn ToSqlItem + Sync)> = items
             .iter()
             .map(|item| item.get_values_of_all_fields())
             .flatten()
             .collect();
-
-        let result = { self.client.lock().query(&insert, params.as_slice()) };
-        Ok(result
-            .map(|row_result| -> Result<T, Error> {
-                match row_result {
-                    Ok(row) => T::from_row(&row),
-                    Err(e) => Err(e),
-                }
-            })
-            .try_collect::<Vec<T>>()
-            .await?)
+        let client = self.client.lock();
+        client
+            .query(sql.as_str(), params.as_slice())
+            .map(|rows| rows?
+            .iter()
+            .map(|row| T::from_row(row))
+            .collect()
+        ).await
     }
 
     ///
@@ -359,20 +325,10 @@ impl Connection {
             fields = T::get_fields(),
             prepared_values = T::get_prepared_arguments_list(),
         );
-        let insert = self.client.lock().prepare(sql.as_str());
-        let insert = insert.await?;
+        let client = self.client.lock();
 
-        let result = {
-            self.client
-                .lock()
-                .query(&insert, item.get_query_params().as_slice())
-        };
-        let mut boxed_fut = result.boxed();
-        let mut pinned_fut = Pin::new(&mut boxed_fut);
-        pinned_fut
-            .try_next()
-            .map_ok(|row| T::from_row(&row.expect("At least it should return one row")))
-            .await?
+        T::from_row(&client
+            .query_one(sql.as_str(), item.get_query_params().as_slice()).await?)
     }
 
     ///
@@ -416,24 +372,20 @@ impl Connection {
             prepared_values =
                 generate_prepared_arguments_list(T::get_argument_count(), items.len()),
         );
-        let insert = self.client.lock().prepare(sql.as_str());
-        let insert = insert.await?;
 
         let params: Vec<&(dyn ToSqlItem + Sync)> = items
             .iter()
             .map(|item| item.get_query_params())
             .flatten()
             .collect();
-        let result = { self.client.lock().query(&insert, params.as_slice()) };
-        Ok(result
-            .map(|row_result| -> Result<T, Error> {
-                match row_result {
-                    Ok(row) => T::from_row(&row),
-                    Err(e) => Err(e),
-                }
-            })
-            .try_collect::<Vec<T>>()
-            .await?)
+        let client = self.client.lock();
+        client
+            .query(sql.as_str(), params.as_slice())
+            .map(|rows| rows?
+                .iter()
+                .map(|row| T::from_row(row))
+                .collect()
+            ).await
     }
 
     ///
@@ -472,20 +424,9 @@ impl Connection {
             table_name = T::get_table_name(),
             primary_key = T::get_primary_key()
         );
-        let insert = self.client.lock().prepare(sql.as_str());
-        let insert = insert.await?;
-
-        let result = {
-            self.client
-                .lock()
-                .query(&insert, &[&item.get_primary_key_value()])
-        };
-        let mut boxed_fut = result.boxed();
-        let mut pinned_fut = Pin::new(&mut boxed_fut);
-        pinned_fut
-            .try_next()
-            .map_ok(|row| T::from_row(&row.expect("At least it should return one row")))
-            .await?
+        let client = self.client.lock();
+        T::from_row(&client
+            .query_one(sql.as_str(), &[&item.get_primary_key_value()]).await?)
     }
 
     ///
@@ -531,8 +472,6 @@ impl Connection {
             primary_key = T::get_primary_key(),
             argument_list = generate_single_prepared_arguments_list(1, items.len())
         );
-        let insert = self.client.lock().prepare(sql.as_str());
-        let insert = insert.await?;
         let params: Vec<P> = items
             .iter()
             .map(|item| item.get_primary_key_value())
@@ -541,16 +480,13 @@ impl Connection {
             .iter()
             .map(|i| i as &(dyn tokio_postgres::types::ToSql + Sync))
             .collect::<Vec<_>>();
-        let result = { self.client.lock().query(&insert, p.as_slice()) };
-        Ok(result
-            .map(|row_result| -> Result<T, Error> {
-                match row_result {
-                    Ok(row) => T::from_row(&row),
-                    Err(e) => Err(e),
-                }
-            })
-            .try_collect::<Vec<T>>()
-            .await?)
+        let client = self.client.lock();
+        client.query(sql.as_str(), p.as_slice())
+               .map(|rows| rows?
+                   .iter()
+                   .map(|row| T::from_row(row))
+                   .collect()
+               ).await
     }
 }
 ///
