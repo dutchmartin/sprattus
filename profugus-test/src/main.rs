@@ -5,16 +5,16 @@ use crate::keywords::test_if_keywords_are_escaped;
 mod keywords;
 
 #[derive(FromSql, ToSql, Eq, PartialEq, Debug)]
-#[profugus(table = "reorder")]
+#[sql(table = "reorder")]
 struct Reorder {
-    #[profugus(primary_key)]
-    #[profugus(name = "prod_id")]
+    #[sql(primary_key)]
+    #[sql(name = "prod_id")]
     id: i32,
     date_low: NaiveDate,
-    #[profugus(name = "quan_low")]
+    #[sql(name = "quan_low")]
     quantity_low: i32,
     date_reordered: Option<NaiveDate>,
-    #[profugus(name = "quan_reordered")]
+    #[sql(name = "quan_reordered")]
     quantity_reordered: Option<i32>,
     date_expected: Option<NaiveDate>,
 }

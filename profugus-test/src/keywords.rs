@@ -3,7 +3,7 @@ use profugus::*;
 /// This struct just contains keywords as names, just to test.
 #[derive(Eq, PartialEq, Debug, ToSql, FromSql)]
 struct Collate {
-    #[profugus(primary_key)]
+    #[sql(primary_key)]
     id: i32,
     column: bool,
     desc: bool,

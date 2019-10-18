@@ -14,7 +14,7 @@ use syn::{parse_macro_input, Data::Struct, DeriveInput};
 
 
 /// Automatically implements the [`ToSql`](./trait.ToSql.html) trait for a given struct.
-#[proc_macro_derive(ToSql, attributes(profugus))]
+#[proc_macro_derive(ToSql, attributes(sql))]
 pub fn to_sql(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let derive_input = parse_macro_input!(input as DeriveInput);
 
@@ -59,7 +59,7 @@ pub fn to_sql(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 }
 
 /// Automatically implements the [`FromSql`](./trait.FromSql.html) trait for a given struct.
-#[proc_macro_derive(FromSql, attributes(profugus))]
+#[proc_macro_derive(FromSql, attributes(sql))]
 pub fn from_sql(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
 
@@ -71,7 +71,7 @@ pub fn from_sql(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
         'field_loop: for field in data.fields {
             'attribute_loop: for attr in field.attrs {
                 if let Some(ident) = attr.path.segments.first() {
-                    if ident.ident.eq("profugus") {
+                    if ident.ident.eq("sql") {
                         // Attr is ours, let's parse it.
                         for tokens in attr.tokens.into_iter() {
                             let group = match tokens {

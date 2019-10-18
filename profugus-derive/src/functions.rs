@@ -22,7 +22,7 @@ pub (crate) fn get_table_name_from_attributes(attributes: Vec<Attribute>) -> Opt
     for attribute in attributes {
         match attribute.path.segments.first() {
             Some(segment) => {
-                if !segment.ident.to_string().eq("profugus") {
+                if !segment.ident.to_string().eq("sql") {
                     continue;
                 }
             }
@@ -128,7 +128,7 @@ pub (crate) fn get_ident_name_from_path(path: &Type) -> Ident {
 
 pub (crate) fn is_profugus_attribute(attribute: &Attribute) -> bool {
     match attribute.path.get_ident() {
-        Some(name) => name.eq("profugus"),
+        Some(name) => name.eq("sql"),
         _ => false,
     }
 }
