@@ -1,5 +1,5 @@
 use chrono::*;
-use profugus::*;
+use sprattus::*;
 use crate::keywords::test_if_keywords_are_escaped;
 
 mod keywords;

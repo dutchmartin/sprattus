@@ -1,5 +1,5 @@
 [package]
-name = "profugus-test"
+name = "sprattus-test"
 version = "0.1.0"
 authors = ["Martijn Groeneveldt <Martijn Groeneveldt>"]
 edition = "2018"
@@ -7,6 +7,6 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-profugus = { path = "../profugus", features = ["with-chrono-0_4"] }
+sprattus = { path = "../sprattus", features = ["with-chrono-0_4"] }
 tokio = "^0.2.0-alpha.6"
 chrono = "^0.4.0"

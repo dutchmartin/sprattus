@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    "profugus",
-    "profugus-test",
-    "profugus-derive",
+    "sprattus",
+    "sprattus-test",
+    "sprattus-derive",
 ]

@@ -25,7 +25,7 @@ impl Connection {
     ///
     /// Example
     /// ```
-    /// use profugus::*;
+    /// use sprattus::*;
     ///
     /// let conn = Connection::new("postgresql://localhost/dellstore2?user=tg").await?;
     /// ```
@@ -73,7 +73,7 @@ impl Connection {
     ///
     /// Example:
     /// ```
-    /// use profugus::{ Connection, FromSql };
+    /// use sprattus::{ Connection, FromSql };
     /// use tokio::prelude::*;
     ///
     /// #[derive(FromSql, Eq, PartialEq, Debug)]
@@ -139,9 +139,9 @@ impl Connection {
     ///
     /// Example:
     /// ```
-    /// use profugus::Connection;
+    /// use sprattus::Connection;
     /// use tokio::prelude::*;
-    /// use profugus::FromSql;
+    /// use sprattus::FromSql;
     ///
     /// #[derive(FromSql, Eq, PartialEq, Debug)]
     /// struct Product {
@@ -173,9 +173,9 @@ impl Connection {
     ///
     /// Example:
     /// ```
-    /// use profugus::Connection;
+    /// use sprattus::Connection;
     /// use tokio::prelude::*;
-    /// use profugus::FromSql;
+    /// use sprattus::FromSql;
     ///
     /// #[derive(FromSql, ToSql, Eq, PartialEq, Debug)]
     /// struct Product {
@@ -237,9 +237,9 @@ impl Connection {
     ///
     /// Example:
     /// ```
-    /// use profugus::Connection;
+    /// use sprattus::Connection;
     /// use tokio::prelude::*;
-    /// use profugus::FromSql;
+    /// use sprattus::FromSql;
     ///
     /// #[derive(FromSql, ToSql, Eq, PartialEq, Debug)]
     /// struct Product {
@@ -327,13 +327,13 @@ impl Connection {
     ///
     /// Example:
     /// ```
-    /// use profugus::Connection;
+    /// use sprattus::Connection;
     /// use tokio::prelude::*;
-    /// use profugus::FromSql;
+    /// use sprattus::FromSql;
     ///
     /// #[derive(FromSql, ToSql, Eq, PartialEq, Debug)]
     /// struct Product {
-    ///     #[profugus(primary_key)]
+    ///     #[sprattus(primary_key)]
     ///     prod_id: i32,
     ///     title: String
     /// }
@@ -380,9 +380,9 @@ impl Connection {
     ///
     /// Example:
     /// ```
-    /// use profugus::Connection;
+    /// use sprattus::Connection;
     /// use tokio::prelude::*;
-    /// use profugus::FromSql;
+    /// use sprattus::FromSql;
     ///
     /// #[derive(FromSql, ToSql, Eq, PartialEq, Debug)]
     /// struct Product {
@@ -441,9 +441,9 @@ impl Connection {
     ///
     /// Example:
     /// ```
-    /// use profugus::Connection;
+    /// use sprattus::Connection;
     /// use tokio::prelude::*;
-    /// use profugus::FromSql;
+    /// use sprattus::FromSql;
     ///
     /// #[derive(FromSql, ToSql, Eq, PartialEq, Debug)]
     /// struct Product {
@@ -493,9 +493,9 @@ impl Connection {
     ///
     /// Example:
     /// ```
-    /// use profugus::Connection;
+    /// use sprattus::Connection;
     /// use tokio::prelude::*;
-    /// use profugus::FromSql;
+    /// use sprattus::FromSql;
     ///
     /// #[derive(FromSql, ToSql, Eq, PartialEq, Debug)]
     /// struct Product {

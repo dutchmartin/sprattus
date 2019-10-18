@@ -126,7 +126,7 @@ pub (crate) fn get_ident_name_from_path(path: &Type) -> Ident {
     }
 }
 
-pub (crate) fn is_profugus_attribute(attribute: &Attribute) -> bool {
+pub (crate) fn is_sprattus_attribute(attribute: &Attribute) -> bool {
     match attribute.path.get_ident() {
         Some(name) => name.eq("sql"),
         _ => false,
@@ -147,7 +147,7 @@ pub (crate) fn generate_argument_list_with_types(fields: &[StructFieldData]) -> 
 
 pub (crate) fn find_field_table_name(field: &Field) -> Option<Literal> {
     'attribute_loop: for attribute in field.attrs.clone() {
-        if !is_profugus_attribute(&attribute) {
+        if !is_sprattus_attribute(&attribute) {
             continue;
         }
         for token in attribute.tokens {
@@ -171,7 +171,7 @@ pub (crate) fn find_field_table_name(field: &Field) -> Option<Literal> {
 
 pub (crate) fn find_key_type(field: &Field) -> KeyType {
     'attribute_loop: for attribute in field.attrs.clone() {
-        if !is_profugus_attribute(&attribute) {
+        if !is_sprattus_attribute(&attribute) {
             continue;
         }
         for token in attribute.tokens {

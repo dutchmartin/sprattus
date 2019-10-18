@@ -1,5 +1,5 @@
 [package]
-name = "profugus-derive"
+name = "sprattus-derive"
 version = "0.1.0"
 authors = ["Martijn <martijn@tweedegolf.nl>"]
 edition = "2018"

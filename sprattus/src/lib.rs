@@ -2,9 +2,9 @@
 //!
 //! # Getting started
 //! 
-//! Add profugus to your cargo.toml:  
+//! Add sprattus to your cargo.toml:  
 //! ```toml
-//! profugus = "0.1"
+//! sprattus = "0.1"
 //! ```
 //! Create a table in Postgres:
 //! ```sql
@@ -21,14 +21,14 @@
 //!     name: String
 //! }
 //! ```
-//! And finally add the profugus macro's and annotations:
+//! And finally add the sprattus macro's and annotations:
 //! ```rust
-//! use profugus::*;
+//! use sprattus::*;
 //! 
 //! #[derive(ToSql, FromSql, Debug)]
-//! #[profugus(table = "fruits")]
+//! #[sprattus(table = "fruits")]
 //! struct Fruit {
-//!     #[profugus(primary_key)]
+//!     #[sprattus(primary_key)]
 //!     id: i32,
 //!     name: String
 //! }
@@ -37,12 +37,12 @@
 //! 
 //! ```rust
 //! use tokio::prelude::*;
-//! use profugus::*;
+//! use sprattus::*;
 //! 
 //! #[derive(ToSql, FromSql)]
-//! #[profugus(table = "fruits")]
+//! #[sprattus(table = "fruits")]
 //! struct Fruit {
-//!     #[profugus(primary_key)]
+//!     #[sprattus(primary_key)]
 //!     id: i32,
 //!     name: String
 //! }
@@ -117,11 +117,11 @@
 //! In any case of having not the same name for a field in the database and in Rust, use the rename annotation.
 //! ```
 //! struct Product {
-//!     #[profugus(primary_key)]
+//!     #[sprattus(primary_key)]
 //!     id: i32,
 //!     name: String,
 //!     // Renames the postgres field 'product_price' to costs.
-//!     #[profugus(name = "product_price")]
+//!     #[sprattus(name = "product_price")]
 //!     costs: f64
 //! }
 //! ```
@@ -131,7 +131,7 @@
 //! ```
 //! struct User {
 //!     // Annotates id as primary key of the table.
-//!     #[profugus(primary_key)]
+//!     #[sprattus(primary_key)]
 //!     id: i32,
 //!     name: String,
 //! }
@@ -140,8 +140,8 @@
 //! In many cases, the name of your Rust struct will not correspond with the table in Postgres.
 //! To solve that problem, there is a attribute to select the table belonging to the created struct:
 //! ```rust
-//! // This tells profugus to use the 'houses' table in Postgres.
-//! #[profugus(table = "houses")]
+//! // This tells sprattus to use the 'houses' table in Postgres.
+//! #[sprattus(table = "houses")]
 //! struct House {
 //!     id: i32,
 //!     address: String,
@@ -155,6 +155,6 @@ mod traits;
 
 pub use self::connection::Connection;
 pub use self::traits::{FromSql, ToSql};
-pub use profugus_derive::{FromSql, ToSql};
+pub use sprattus_derive::{FromSql, ToSql};
 pub use tokio_postgres::types::ToSql as ToSqlItem;
 pub use tokio_postgres::{Error, Row};

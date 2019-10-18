@@ -1,14 +1,14 @@
-# profugus, the async Rust ORM for Postgres
+# sprattus, the async Rust ORM for Postgres
 ###### The Future .awaits
 
-profugus is a crate that let's you easily do async CRUD operations on your Postgres database with Rust structs.
+sprattus is a crate that let's you easily do async CRUD operations on your Postgres database with Rust structs.
 
 
 ### Getting started
 
-Add profugus to your cargo.toml:  
+Add sprattus to your cargo.toml:  
 ```toml
-profugus = "0.0.1"
+sprattus = "0.0.1"
 ```
 Create a table in Postgres:
 ```sql
@@ -25,9 +25,9 @@ struct Fruit {
     name: String
 }
 ```
-And finally add the profugus macro's and annotations:
+And finally add the sprattus macro's and annotations:
 ```rust
-use profugus::*;
+use sprattus::*;
 
 #[derive(ToSql, FromSql, Debug)]
 #[sql(table = "fruits")]
@@ -41,7 +41,7 @@ And now you're ready to use the client in combination with you freshly created s
 
 ```rust
 use tokio::prelude::*;
-use profugus::*;
+use sprattus::*;
 
 #[derive(ToSql, FromSql)]
 #[sql(table = "fruits")]

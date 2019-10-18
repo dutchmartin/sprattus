@@ -1,4 +1,4 @@
-use profugus::*;
+use sprattus::*;
 
 /// This struct just contains keywords as names, just to test.
 #[derive(Eq, PartialEq, Debug, ToSql, FromSql)]
