@@ -1,7 +1,6 @@
 use tokio_postgres::types::ToSql as ToSqlItem;
 use tokio_postgres::{Error, Row};
 
-
 /// Arranges deserialization from Postgres table values to a Rust struct.
 pub trait FromSql {
     ///

@@ -8,17 +8,15 @@ use syn::PathArguments::AngleBracketed;
 use syn::Type::Path;
 use syn::{Attribute, Field, GenericArgument, Type};
 
-
-pub (crate) fn get_field_name(field: &Field) -> Ident {
+pub(crate) fn get_field_name(field: &Field) -> Ident {
     match &field.ident {
         Some(ident) => ident.clone(),
         _ => panic!("Could not find a name for one of the fields in your struct"),
     }
 }
 
-
 #[allow(clippy::unnecessary_operation)]
-pub (crate) fn get_table_name_from_attributes(attributes: Vec<Attribute>) -> Option<String> {
+pub(crate) fn get_table_name_from_attributes(attributes: Vec<Attribute>) -> Option<String> {
     for attribute in attributes {
         match attribute.path.segments.first() {
             Some(segment) => {
@@ -57,7 +55,7 @@ pub (crate) fn get_table_name_from_attributes(attributes: Vec<Attribute>) -> Opt
     None
 }
 
-pub (crate) fn get_key_value_of_attribute(tokens: proc_macro2::Group) -> (Ident, Option<Literal>) {
+pub(crate) fn get_key_value_of_attribute(tokens: proc_macro2::Group) -> (Ident, Option<Literal>) {
     let mut name: Ident = Ident::new("temp", Span::call_site());
     for token in tokens.stream() {
         match token {
@@ -78,7 +76,7 @@ pub (crate) fn get_key_value_of_attribute(tokens: proc_macro2::Group) -> (Ident,
     (name, None)
 }
 
-pub (crate) fn generate_argument_list(length: usize) -> String {
+pub(crate) fn generate_argument_list(length: usize) -> String {
     let mut prepared_arguments_list = String::new();
     for i in 1..=length {
         if i == length {
@@ -89,7 +87,7 @@ pub (crate) fn generate_argument_list(length: usize) -> String {
     }
     prepared_arguments_list
 }
-pub (crate) fn generate_field_list(field_list: &[String]) -> String {
+pub(crate) fn generate_field_list(field_list: &[String]) -> String {
     let mut field_list_str = String::new();
     for (i, field) in field_list.iter().enumerate() {
         let field = if !field.starts_with('"') {
@@ -106,7 +104,7 @@ pub (crate) fn generate_field_list(field_list: &[String]) -> String {
     field_list_str
 }
 
-pub (crate) fn get_ident_name_from_path(path: &Type) -> Ident {
+pub(crate) fn get_ident_name_from_path(path: &Type) -> Ident {
     match path {
         Path(path) => match path.path.get_ident() {
             Some(ident) => ident.clone(),
@@ -126,14 +124,14 @@ pub (crate) fn get_ident_name_from_path(path: &Type) -> Ident {
     }
 }
 
-pub (crate) fn is_sprattus_attribute(attribute: &Attribute) -> bool {
+pub(crate) fn is_sprattus_attribute(attribute: &Attribute) -> bool {
     match attribute.path.get_ident() {
         Some(name) => name.eq("sql"),
         _ => false,
     }
 }
 
-pub (crate) fn generate_argument_list_with_types(fields: &[StructFieldData]) -> String {
+pub(crate) fn generate_argument_list_with_types(fields: &[StructFieldData]) -> String {
     let mut prepared_arguments_list = String::new();
     for (i, pg_type) in fields.iter().map(|field| &field.pg_field_type).enumerate() {
         if i == (fields.len() - 1) {
@@ -145,7 +143,7 @@ pub (crate) fn generate_argument_list_with_types(fields: &[StructFieldData]) -> 
     prepared_arguments_list
 }
 
-pub (crate) fn find_field_table_name(field: &Field) -> Option<Literal> {
+pub(crate) fn find_field_table_name(field: &Field) -> Option<Literal> {
     'attribute_loop: for attribute in field.attrs.clone() {
         if !is_sprattus_attribute(&attribute) {
             continue;
@@ -169,7 +167,7 @@ pub (crate) fn find_field_table_name(field: &Field) -> Option<Literal> {
     None
 }
 
-pub (crate) fn find_key_type(field: &Field) -> KeyType {
+pub(crate) fn find_key_type(field: &Field) -> KeyType {
     'attribute_loop: for attribute in field.attrs.clone() {
         if !is_sprattus_attribute(&attribute) {
             continue;
@@ -202,7 +200,7 @@ pub (crate) fn find_key_type(field: &Field) -> KeyType {
     NoKey
 }
 
-pub (crate) fn get_postgres_datatype(rust_type: String) -> String {
+pub(crate) fn get_postgres_datatype(rust_type: String) -> String {
     match rust_type.as_str() {
         "bool" => String::from("BOOL"),
         "str" => String::from("VARCHAR"),

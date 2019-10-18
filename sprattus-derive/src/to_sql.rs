@@ -5,17 +5,17 @@ use proc_macro2::{Ident, Literal, TokenStream};
 use quote::quote;
 
 #[derive(Debug, Eq, PartialEq)]
-pub (crate) enum KeyType {
+pub(crate) enum KeyType {
     PrimaryKey,
     PrimaryKeyCandidate,
     NoKey,
 }
 
-pub (crate) enum StructName {
+pub(crate) enum StructName {
     Renamed { original: Ident, new: Literal },
     Named { name: Ident },
 }
-pub (crate) struct StructFieldData {
+pub(crate) struct StructFieldData {
     pub name: StructName,
     pub key_type: KeyType,
     pub field_type: Ident,
@@ -46,10 +46,7 @@ impl ToString for StructName {
     }
 }
 
-
-
-
-pub (crate) fn build_to_sql_implementation(
+pub(crate) fn build_to_sql_implementation(
     name: &Ident,
     table_name: String,
     field_list: &mut Vec<StructFieldData>,

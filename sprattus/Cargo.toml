@@ -8,7 +8,6 @@ readme = "../README.MD"
 [dependencies]
 tokio-postgres = { version="^0.5.0-alpha.1" , features = ["default"]}
 tokio = "^0.2.0-alpha.6"
-futures-preview = { version = "^0.3.0-alpha.19", features = ["async-await"] }
 futures-util-preview = { version = "^0.3.0-alpha.19" }
 parking_lot = "0.9.0"
 strfmt = "0.1.6"

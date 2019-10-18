@@ -1,11 +1,8 @@
 use crate::*;
-use futures::{Stream, TryStreamExt};
 use futures_util::future::FutureExt;
-use futures_util::stream::StreamExt;
 use futures_util::try_future::TryFutureExt;
 use parking_lot::*;
 use std::collections::HashMap;
-use std::pin::Pin;
 use std::sync::Arc;
 use strfmt::strfmt;
 use tokio;
@@ -113,11 +110,8 @@ impl Connection {
         self.client
             .lock()
             .query(sql, args)
-            .map(|rows| rows?
-                .iter()
-                .map(|row| T::from_row(row))
-                .collect()
-            ).await
+            .map(|rows| rows?.iter().map(|row| T::from_row(row)).collect())
+            .await
     }
 
     ///
@@ -200,7 +194,11 @@ impl Connection {
         let sql = strfmt(sql_template, &sql_vars).unwrap();
         let client = self.client.lock();
 
-        T::from_row(&client.query_one(sql.as_str(), item.get_values_of_all_fields().as_slice()).await?)
+        T::from_row(
+            &client
+                .query_one(sql.as_str(), item.get_values_of_all_fields().as_slice())
+                .await?,
+        )
     }
 
     ///
@@ -281,11 +279,8 @@ impl Connection {
         let client = self.client.lock();
         client
             .query(sql.as_str(), params.as_slice())
-            .map(|rows| rows?
-            .iter()
-            .map(|row| T::from_row(row))
-            .collect()
-        ).await
+            .map(|rows| rows?.iter().map(|row| T::from_row(row)).collect())
+            .await
     }
 
     ///
@@ -327,8 +322,11 @@ impl Connection {
         );
         let client = self.client.lock();
 
-        T::from_row(&client
-            .query_one(sql.as_str(), item.get_query_params().as_slice()).await?)
+        T::from_row(
+            &client
+                .query_one(sql.as_str(), item.get_query_params().as_slice())
+                .await?,
+        )
     }
 
     ///
@@ -381,11 +379,8 @@ impl Connection {
         let client = self.client.lock();
         client
             .query(sql.as_str(), params.as_slice())
-            .map(|rows| rows?
-                .iter()
-                .map(|row| T::from_row(row))
-                .collect()
-            ).await
+            .map(|rows| rows?.iter().map(|row| T::from_row(row)).collect())
+            .await
     }
 
     ///
@@ -425,8 +420,11 @@ impl Connection {
             primary_key = T::get_primary_key()
         );
         let client = self.client.lock();
-        T::from_row(&client
-            .query_one(sql.as_str(), &[&item.get_primary_key_value()]).await?)
+        T::from_row(
+            &client
+                .query_one(sql.as_str(), &[&item.get_primary_key_value()])
+                .await?,
+        )
     }
 
     ///
@@ -481,12 +479,10 @@ impl Connection {
             .map(|i| i as &(dyn tokio_postgres::types::ToSql + Sync))
             .collect::<Vec<_>>();
         let client = self.client.lock();
-        client.query(sql.as_str(), p.as_slice())
-               .map(|rows| rows?
-                   .iter()
-                   .map(|row| T::from_row(row))
-                   .collect()
-               ).await
+        client
+            .query(sql.as_str(), p.as_slice())
+            .map(|rows| rows?.iter().map(|row| T::from_row(row)).collect())
+            .await
     }
 }
 ///

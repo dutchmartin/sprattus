@@ -13,16 +13,16 @@ struct Collate {
 }
 
 pub async fn test_if_keywords_are_escaped(conn: Connection) -> Result<(), Error> {
-    print!("\n Testing if keywords are properly escaped ... \n\n" );
+    print!("\n Testing if keywords are properly escaped ... \n\n");
 
-    let fixture = vec!(
+    let fixture = vec![
         Collate {
             id: 1,
             column: true,
             desc: false,
             constraint: Some(103),
             current_user: String::from("Martin"),
-            fetch: String::from("example.com")
+            fetch: String::from("example.com"),
         },
         Collate {
             id: 2,
@@ -30,7 +30,7 @@ pub async fn test_if_keywords_are_escaped(conn: Connection) -> Result<(), Error>
             desc: true,
             constraint: Some(7689),
             current_user: String::from("Steven"),
-            fetch: String::from("google.com")
+            fetch: String::from("google.com"),
         },
         Collate {
             id: 3,
@@ -38,18 +38,18 @@ pub async fn test_if_keywords_are_escaped(conn: Connection) -> Result<(), Error>
             desc: true,
             constraint: Some(543432),
             current_user: String::from("Superman"),
-            fetch: String::from("tweedegolf.nl")
-        }
-    );
+            fetch: String::from("tweedegolf.nl"),
+        },
+    ];
 
-    let update_fixture = vec!(
+    let update_fixture = vec![
         Collate {
             id: 1,
             column: false,
             desc: false,
             constraint: Some(4535),
             current_user: String::from("Martin"),
-            fetch: String::from("martijngroeneveldt.nl")
+            fetch: String::from("martijngroeneveldt.nl"),
         },
         Collate {
             id: 2,
@@ -57,7 +57,7 @@ pub async fn test_if_keywords_are_escaped(conn: Connection) -> Result<(), Error>
             desc: true,
             constraint: Some(7645389),
             current_user: String::from("Steven"),
-            fetch: String::from("google.com")
+            fetch: String::from("google.com"),
         },
         Collate {
             id: 3,
@@ -65,9 +65,9 @@ pub async fn test_if_keywords_are_escaped(conn: Connection) -> Result<(), Error>
             desc: false,
             constraint: None,
             current_user: String::from("Batman"),
-            fetch: String::from("tweedegolf.nl")
-        }
-    );
+            fetch: String::from("tweedegolf.nl"),
+        },
+    ];
     // Setup table
     conn.batch_execute(
         "DROP TABLE IF EXISTS \"Collate\";
@@ -78,7 +78,8 @@ pub async fn test_if_keywords_are_escaped(conn: Connection) -> Result<(), Error>
 	    \"constraint\" int4 NULL,
 	    \"current_user\" varchar NOT NULL,
 	    \"fetch\" varchar NOT NULL);",
-    ).await?;
+    )
+    .await?;
 
     // Insert test
     let created_items = conn.create_multiple(&fixture).await?;

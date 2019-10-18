@@ -1,17 +1,16 @@
 extern crate proc_macro;
 
-mod functions;
 mod from_sql;
+mod functions;
 mod to_sql;
 
-use crate::to_sql::*;
 use crate::from_sql::SqlField;
 use crate::functions::*;
+use crate::to_sql::*;
 use proc_macro2::{Literal, TokenTree::Group};
 use quote::quote;
 use syn::export::TokenStream2;
 use syn::{parse_macro_input, Data::Struct, DeriveInput};
-
 
 /// Automatically implements the [`ToSql`](./trait.ToSql.html) trait for a given struct.
 #[proc_macro_derive(ToSql, attributes(sql))]
@@ -142,7 +141,3 @@ pub fn from_sql(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     };
     expanded.into()
 }
-
-
-
-

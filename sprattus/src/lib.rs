@@ -1,7 +1,7 @@
 //! A crate for easy Postgres database communication.
 //!
 //! # Getting started
-//! 
+//!
 //! Add sprattus to your cargo.toml:  
 //! ```toml
 //! sprattus = "0.1"
@@ -13,7 +13,7 @@
 //!    name VARCHAR NOT NULL
 //! );
 //! ```
-//! 
+//!
 //! Create a struct corresponding to the created table:
 //! ```rust
 //! struct Fruit {
@@ -24,7 +24,7 @@
 //! And finally add the sprattus macro's and annotations:
 //! ```rust
 //! use sprattus::*;
-//! 
+//!
 //! #[derive(ToSql, FromSql, Debug)]
 //! #[sprattus(table = "fruits")]
 //! struct Fruit {
@@ -34,11 +34,11 @@
 //! }
 //! ```
 //! And now your ready to use the client in combination with you freshly created struct!
-//! 
+//!
 //! ```rust
 //! use tokio::prelude::*;
 //! use sprattus::*;
-//! 
+//!
 //! #[derive(ToSql, FromSql)]
 //! #[sprattus(table = "fruits")]
 //! struct Fruit {
@@ -46,7 +46,7 @@
 //!     id: i32,
 //!     name: String
 //! }
-//! 
+//!
 //! #[tokio::main]
 //! async fn main() -> Result<(), Error>{
 //!     let conn = Connection::new("postgresql://! localhost/dellstore2?user=tg").await?;
