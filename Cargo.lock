@@ -799,7 +799,7 @@ version = "0.0.1"
 dependencies = [
  "futures-util-preview 0.3.0-alpha.19 (registry+https://github.com/rust-lang/crates.io-index)",
  "parking_lot 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "sprattus-derive 0.1.0",
+ "sprattus-derive 0.0.1",
  "strfmt 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "tokio 0.2.0-alpha.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "tokio-postgres 0.5.0-alpha.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -807,7 +807,7 @@ dependencies = [
 
 [[package]]
 name = "sprattus-derive"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "proc-macro2 1.0.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "quote 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)",

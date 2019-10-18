@@ -5,7 +5,7 @@ authors = ["Martijn Groeneveldt <martijn.groeneveldt@gmail.com>"]
 edition = "2018"
 readme = "../README.MD"
 description = "A async orm for Postgres"
-repository = "https://github.com/dutchmartin/profugus"
+repository = "https://github.com/dutchmartin/sprattus"
 license-file = "../LICENSE"
 categories = ["database", "asynchronous", "postgres"]
 

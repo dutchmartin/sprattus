@@ -1,12 +1,12 @@
 [package]
 name = "sprattus-derive"
-version = "0.1.0"
+version = "0.0.1"
 authors = ["Martijn <martijn@tweedegolf.nl>"]
 edition = "2018"
 readme = "../README.MD"
 license-file = "../LICENSE"
 description = "The derive macros for a async orm for Postgres"
-repository = "https://github.com/dutchmartin/profugus"
+repository = "https://github.com/dutchmartin/sprattus"
 categories = ["database", "asynchronous", "postgres"]
 
 [lib]
