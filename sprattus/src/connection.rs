@@ -242,7 +242,7 @@ impl Connection {
     ///     assert_eq!(product_list, old_products);
     /// }
     /// ```
-    pub async fn update_multiple<T>(&self, items: &Vec<T>) -> Result<Vec<T>, Error>
+    pub async fn update_multiple<T>(&self, items: &[T]) -> Result<Vec<T>, Error>
     where
         T: Sized + ToSql + FromSql,
     {
@@ -359,7 +359,7 @@ impl Connection {
     ///     conn.delete(products).await.unwrap();
     /// }
     /// ```
-    pub async fn create_multiple<T>(&self, items: &Vec<T>) -> Result<Vec<T>, Error>
+    pub async fn create_multiple<T>(&self, items: &[T]) -> Result<Vec<T>, Error>
     where
         T: Sized + ToSql + FromSql,
     {
@@ -458,7 +458,7 @@ impl Connection {
     ///     conn.delete(products).await.unwrap();
     /// }
     /// ```
-    pub async fn delete_multiple<P, T>(&self, items: &Vec<T>) -> Result<Vec<T>, Error>
+    pub async fn delete_multiple<P, T>(&self, items: &[T]) -> Result<Vec<T>, Error>
     where
         P: tokio_postgres::types::ToSql,
         T: traits::FromSql + traits::ToSql<PK = P>,
