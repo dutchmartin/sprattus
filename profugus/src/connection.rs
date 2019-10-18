@@ -15,11 +15,11 @@ use tokio_postgres::*;
 ///
 ///
 #[derive(Clone)]
-pub struct PGConnection {
+pub struct Connection {
     client: Arc<Mutex<Client>>,
 }
 
-impl PGConnection {
+impl Connection {
     ///
     /// Creates a new connection to the database.
     ///
@@ -27,16 +27,16 @@ impl PGConnection {
     /// ```
     /// use profugus::*;
     ///
-    /// let conn = PGConnection::new("postgresql://localhost/dellstore2?user=tg").await?;
+    /// let conn = Connection::new("postgresql://localhost/dellstore2?user=tg").await?;
     /// ```
-    pub async fn new(connection_string: &str) -> Result<PGConnection, Error> {
+    pub async fn new(connection_string: &str) -> Result<Connection, Error> {
         let (client, connection) = tokio_postgres::connect(connection_string, NoTls).await?;
 
         let connection = connection
             .map_err(|e| panic!("connection error: {}", e))
             .map(|conn| conn.unwrap());
         tokio::spawn(connection);
-        Ok(PGConnection {
+        Ok(Connection {
             client: Arc::new(Mutex::new(client)),
         })
     }
@@ -73,7 +73,7 @@ impl PGConnection {
     ///
     /// Example:
     /// ```
-    /// use profugus::{ PGConnection, FromSql };
+    /// use profugus::{ Connection, FromSql };
     /// use tokio::prelude::*;
     ///
     /// #[derive(FromSql, Eq, PartialEq, Debug)]
@@ -83,7 +83,7 @@ impl PGConnection {
     /// }
     /// #[tokio::main]
     /// async fn main() {
-    ///     let conn = PGConnection::new("postgresql://localhost/dellstore2?user=tg").await.unwrap();
+    ///     let conn = Connection::new("postgresql://localhost/dellstore2?user=tg").await.unwrap();
     ///     let product_list : Vec<Product> = conn.query_multiple("SELECT prod_id, title FROM Products LIMIT 3", &[]).await.unwrap();
     ///     assert_eq!(product_list,
     ///         vec!(
@@ -139,7 +139,7 @@ impl PGConnection {
     ///
     /// Example:
     /// ```
-    /// use profugus::PGConnection;
+    /// use profugus::Connection;
     /// use tokio::prelude::*;
     /// use profugus::FromSql;
     ///
@@ -151,7 +151,7 @@ impl PGConnection {
     ///
     /// #[tokio::main]
     /// async fn main() {
-    ///     let conn = PGConnection::new("postgresql://localhost/dellstore2?user=tg").await.unwrap();
+    ///     let conn = Connection::new("postgresql://localhost/dellstore2?user=tg").await.unwrap();
     ///     let product : Product = conn.query("SELECT prod_id, title FROM Products LIMIT 1", &[]).await.unwrap();
     ///     assert_eq!(product, Product{ prod_id: 1, title: String::from("ACADEMY ACADEMY")});
     /// }
@@ -173,7 +173,7 @@ impl PGConnection {
     ///
     /// Example:
     /// ```
-    /// use profugus::PGConnection;
+    /// use profugus::Connection;
     /// use tokio::prelude::*;
     /// use profugus::FromSql;
     ///
@@ -185,7 +185,7 @@ impl PGConnection {
     ///
     /// #[tokio::main]
     /// async fn main() {
-    ///     let conn = PGConnection::new("postgresql://localhost/dellstore2?user=tg").await.unwrap();
+    ///     let conn = Connection::new("postgresql://localhost/dellstore2?user=tg").await.unwrap();
     ///     // Change a existing record in the database.
     ///     conn.update(Product { prod_id : 50, title: String::from("Rust ORM")}).await.expect("update failed");
     ///
@@ -237,7 +237,7 @@ impl PGConnection {
     ///
     /// Example:
     /// ```
-    /// use profugus::PGConnection;
+    /// use profugus::Connection;
     /// use tokio::prelude::*;
     /// use profugus::FromSql;
     ///
@@ -249,7 +249,7 @@ impl PGConnection {
     ///
     /// #[tokio::main]
     /// async fn main() {
-    ///     let conn = PGConnection::new("postgresql://localhost/dellstore2?user=tg").await.unwrap();
+    ///     let conn = Connection::new("postgresql://localhost/dellstore2?user=tg").await.unwrap();
     ///     let new_products = vec!(
     ///             Product{ prod_id: 60, title: String::from("Rust ACADEMY") },
     ///             Product{ prod_id: 61, title: String::from("SQL ACADEMY") },
@@ -327,7 +327,7 @@ impl PGConnection {
     ///
     /// Example:
     /// ```
-    /// use profugus::PGConnection;
+    /// use profugus::Connection;
     /// use tokio::prelude::*;
     /// use profugus::FromSql;
     ///
@@ -340,7 +340,7 @@ impl PGConnection {
     ///
     /// #[tokio::main]
     /// async fn main() {
-    ///     let conn = PGConnection::new("postgresql://localhost/dellstore2?user=tg").await.unwrap();
+    ///     let conn = Connection::new("postgresql://localhost/dellstore2?user=tg").await.unwrap();
     ///     let new_product = Product {prod_id: 0, title: String::from("Sql insert lesson")};
     ///     let id = conn.create(new_product).await.unwrap().get_id();
     ///     let product = conn.query("SELECT prod_id, title from Products where prod_id = $1", &[id]);
@@ -380,7 +380,7 @@ impl PGConnection {
     ///
     /// Example:
     /// ```
-    /// use profugus::PGConnection;
+    /// use profugus::Connection;
     /// use tokio::prelude::*;
     /// use profugus::FromSql;
     ///
@@ -392,7 +392,7 @@ impl PGConnection {
     ///
     /// #[tokio::main]
     /// async fn main() {
-    ///     let conn = PGConnection::new("postgresql://localhost/dellstore2?user=tg").await.unwrap();
+    ///     let conn = Connection::new("postgresql://localhost/dellstore2?user=tg").await.unwrap();
     ///     let new_products = vec!(
     ///         Product {prod_id: 0, title: String::from("Sql insert lesson")},
     ///         Product {prod_id: 0, title: String::from("Rust macro lesson")},
@@ -441,7 +441,7 @@ impl PGConnection {
     ///
     /// Example:
     /// ```
-    /// use profugus::PGConnection;
+    /// use profugus::Connection;
     /// use tokio::prelude::*;
     /// use profugus::FromSql;
     ///
@@ -453,7 +453,7 @@ impl PGConnection {
     ///
     /// #[tokio::main]
     /// async fn main() {
-    ///     let conn = PGConnection::new("postgresql://localhost/dellstore2?user=tg").await.unwrap();
+    ///     let conn = Connection::new("postgresql://localhost/dellstore2?user=tg").await.unwrap();
     ///     let new_product = Product {prod_id: 0, title: String::from("Sql insert lesson")};
     ///     let id = conn.create(new_product).await.unwrap().get_id();
     ///     let product = conn.query("SELECT prod_id, title from Products where prod_id = $1", &[id]);
@@ -493,7 +493,7 @@ impl PGConnection {
     ///
     /// Example:
     /// ```
-    /// use profugus::PGConnection;
+    /// use profugus::Connection;
     /// use tokio::prelude::*;
     /// use profugus::FromSql;
     ///
@@ -505,7 +505,7 @@ impl PGConnection {
     ///
     /// #[tokio::main]
     /// async fn main() {
-    ///     let conn = PGConnection::new("postgresql://localhost/dellstore2?user=tg").await.unwrap();
+    ///     let conn = Connection::new("postgresql://localhost/dellstore2?user=tg").await.unwrap();
     ///     let new_products = vec!(
     ///         Product {prod_id: 0, title: String::from("Sql insert lesson")},
     ///         Product {prod_id: 0, title: String::from("Rust macro lesson")},

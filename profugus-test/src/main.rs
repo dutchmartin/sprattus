@@ -22,7 +22,7 @@ struct Reorder {
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     println!(" Starting Tests...\n");
-    let conn = PGConnection::new("postgresql://localhost/dellstore2?user=tg")
+    let conn = Connection::new("postgresql://localhost/dellstore2?user=tg")
         .await
         .unwrap();
 

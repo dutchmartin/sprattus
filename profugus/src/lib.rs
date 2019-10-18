@@ -49,7 +49,7 @@
 //! 
 //! #[tokio::main]
 //! async fn main() -> Result<(), Error>{
-//!     let conn = PGConnection::new("postgresql://! localhost/dellstore2?user=tg").await?;
+//!     let conn = Connection::new("postgresql://! localhost/dellstore2?user=tg").await?;
 //!     let fruit = Fruit{
 //!         id: 0,
 //!         name: String::from("apple")
@@ -153,7 +153,7 @@
 mod connection;
 mod traits;
 
-pub use self::connection::PGConnection;
+pub use self::connection::Connection;
 pub use self::traits::{FromSql, ToSql};
 pub use profugus_derive::{FromSql, ToSql};
 pub use tokio_postgres::types::ToSql as ToSqlItem;

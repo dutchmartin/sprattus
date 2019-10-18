@@ -12,7 +12,7 @@ struct Collate {
     fetch: String,
 }
 
-pub async fn test_if_keywords_are_escaped(conn: PGConnection) -> Result<(), Error> {
+pub async fn test_if_keywords_are_escaped(conn: Connection) -> Result<(), Error> {
     print!("\n Testing if keywords are properly escaped ... \n\n" );
 
     let fixture = vec!(
