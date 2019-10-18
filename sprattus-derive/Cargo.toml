@@ -4,6 +4,7 @@ version = "0.1.0"
 authors = ["Martijn <martijn@tweedegolf.nl>"]
 edition = "2018"
 readme = "../README.MD"
+license-file = "../LICENSE"
 description = "The derive macros for a async orm for Postgres"
 repository = "https://github.com/dutchmartin/profugus"
 categories = ["database", "asynchronous", "postgres"]

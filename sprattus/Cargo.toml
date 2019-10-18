@@ -6,6 +6,7 @@ edition = "2018"
 readme = "../README.MD"
 description = "A async orm for Postgres"
 repository = "https://github.com/dutchmartin/profugus"
+license-file = "../LICENSE"
 categories = ["database", "asynchronous", "postgres"]
 
 
