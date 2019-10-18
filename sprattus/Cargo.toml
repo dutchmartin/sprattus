@@ -4,6 +4,10 @@ version = "0.0.1"
 authors = ["Martijn Groeneveldt <martijn.groeneveldt@gmail.com>"]
 edition = "2018"
 readme = "../README.MD"
+description = "A async orm for Postgres"
+repository = "https://github.com/dutchmartin/profugus"
+categories = ["database", "asynchronous", "postgres"]
+
 
 [dependencies]
 tokio-postgres = { version="^0.5.0-alpha.1" , features = ["default"]}

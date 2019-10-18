@@ -26,14 +26,14 @@ impl Connection {
     ///
     /// let conn = Connection::new("postgresql://localhost/dellstore2?user=tg").await?;
     /// ```
-    pub async fn new(connection_string: &str) -> Result<Connection, Error> {
+    pub async fn new(connection_string: &str) -> Result<Self, Error> {
         let (client, connection) = tokio_postgres::connect(connection_string, NoTls).await?;
 
         let connection = connection
             .map_err(|e| panic!("connection error: {}", e))
             .map(|conn| conn.unwrap());
         tokio::spawn(connection);
-        Ok(Connection {
+        Ok(Self {
             client: Arc::new(Mutex::new(client)),
         })
     }
