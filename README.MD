@@ -37,7 +37,7 @@ struct Fruit {
     name: String
 }
 ```
-And now your ready to use the client in combination with you freshly created struct!
+And now you're ready to use the client in combination with you freshly created struct!
 
 ```rust
 use tokio::prelude::*;
