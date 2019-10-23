@@ -3,7 +3,7 @@ services:
   psql:
     image: postgres:10
     environment:
-      POSTGRES_USER: tg
+      POSTGRES_USER: postgres
     volumes:
       - "./shared/*:/docker-entrypoint-initdb.d/"
     working_dir: /app
