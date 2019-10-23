@@ -15,34 +15,34 @@
 //! ```
 //!
 //! Create a struct corresponding to the created table:
-//! ```rust
+//! ```no_run
 //! struct Fruit {
 //!     id: i32,
 //!     name: String
 //! }
 //! ```
 //! And finally add the sprattus macro's and annotations:
-//! ```rust
+//! ```no_run
 //! use sprattus::*;
 //!
 //! #[derive(ToSql, FromSql, Debug)]
-//! #[sprattus(table = "fruits")]
+//! #[sql(table = "fruits")]
 //! struct Fruit {
-//!     #[sprattus(primary_key)]
+//!     #[sql(primary_key)]
 //!     id: i32,
 //!     name: String
 //! }
 //! ```
 //! And now your ready to use the client in combination with you freshly created struct!
 //!
-//! ```rust
+//! ```no_run
 //! use tokio::prelude::*;
 //! use sprattus::*;
 //!
-//! #[derive(ToSql, FromSql)]
-//! #[sprattus(table = "fruits")]
+//! #[derive(ToSql, FromSql, Debug)]
+//! #[sql(table = "fruits")]
 //! struct Fruit {
-//!     #[sprattus(primary_key)]
+//!     #[sql(primary_key)]
 //!     id: i32,
 //!     name: String
 //! }
@@ -55,7 +55,7 @@
 //!         name: String::from("apple")
 //!     };
 //!     // Insert created fruit into the database.
-//!     let created_fruit = conn.create(fruit).await?;
+//!     let created_fruit = conn.create(&fruit).await?;
 //!     dbg!(created_fruit);
 //!     Ok(())
 //! }
@@ -115,23 +115,27 @@
 //! On user created structs, there are several options configurable by using annotiations.
 //! ### Renaming fields
 //! In any case of having not the same name for a field in the database and in Rust, use the rename annotation.
-//! ```
+//! ```no_run
+//!# use sprattus::*;
+//!# #[derive(ToSql)]
 //! struct Product {
-//!     #[sprattus(primary_key)]
+//!     #[sql(primary_key)]
 //!     id: i32,
 //!     name: String,
 //!     // Renames the postgres field 'product_price' to costs.
-//!     #[sprattus(name = "product_price")]
+//!     #[sql(name = "product_price")]
 //!     costs: f64
 //! }
 //! ```
 //! ### Selecting a primary key
 //! Every struct that wants to use the `ToSql` derive macro needs to have a primary key.
 //! Therefore there is a annotion available for that.
-//! ```
+//! ```no_run
+//!# use sprattus::*;
+//!# #[derive(ToSql)]
 //! struct User {
 //!     // Annotates id as primary key of the table.
-//!     #[sprattus(primary_key)]
+//!     #[sql(primary_key)]
 //!     id: i32,
 //!     name: String,
 //! }
@@ -139,10 +143,13 @@
 //! ### Selecting a database table
 //! In many cases, the name of your Rust struct will not correspond with the table in Postgres.
 //! To solve that problem, there is a attribute to select the table belonging to the created struct:
-//! ```rust
+//! ```no_run
+//!# use sprattus::*;
 //! // This tells sprattus to use the 'houses' table in Postgres.
-//! #[sprattus(table = "houses")]
+//! #[derive(ToSql)]
+//! #[sql(table = "houses")]
 //! struct House {
+//!     #[sql(primary_key)]
 //!     id: i32,
 //!     address: String,
 //!     city: String,

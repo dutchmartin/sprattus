@@ -20,11 +20,15 @@ impl Connection {
     ///
     /// Creates a new connection to the database.
     ///
-    /// Example
-    /// ```
+    /// Example:
+    /// ```no_run
     /// use sprattus::*;
     ///
-    /// let conn = Connection::new("postgresql://localhost/dellstore2?user=tg").await?;
+    ///# #[tokio::main]
+    ///# async fn main() -> Result<(), Error> {
+    /// let conn = Connection::new("postgresql://localhost?user=tg").await?;
+    ///# return Ok(())
+    ///# }
     /// ```
     pub async fn new(connection_string: &str) -> Result<Self, Error> {
         let (client, connection) = tokio_postgres::connect(connection_string, NoTls).await?;
@@ -69,35 +73,41 @@ impl Connection {
     /// Query multiple rows of a table.
     ///
     /// Example:
-    /// ```
-    /// use sprattus::{ Connection, FromSql };
-    /// use tokio::prelude::*;
-    ///
-    /// #[derive(FromSql, Eq, PartialEq, Debug)]
-    /// struct Product {
-    ///     prod_id: i32,
-    ///     title: String
-    /// }
-    /// #[tokio::main]
-    /// async fn main() {
-    ///     let conn = Connection::new("postgresql://localhost/dellstore2?user=tg").await.unwrap();
-    ///     let product_list : Vec<Product> = conn.query_multiple("SELECT prod_id, title FROM Products LIMIT 3", &[]).await.unwrap();
-    ///     assert_eq!(product_list,
-    ///         vec!(
-    ///         Product {
-    ///		        prod_id : 1,
-    ///		        title : String::from("ACADEMY ACADEMY")
-    ///	        },
-    ///	        Product {
-    ///	    	    prod_id : 2,
-    ///	    	    title : String::from("ACADEMY ACE")
-    /// 	    },
-    ///	        Product {
-    ///	        	prod_id : 3,
-    ///	        	title : String::from("ACADEMY ADAPTATION")
-    ///	        })
-    ///     );
-    /// }
+    /// ```no_run
+    ///# use sprattus::*;
+    ///# use tokio::prelude::*;
+    ///#
+    ///# #[derive(FromSql, Eq, PartialEq, Debug)]
+    ///# struct Product {
+    ///#     #[sql(primary_key)]
+    ///#     prod_id: i32,
+    ///#     title: String
+    ///# }
+    ///# #[tokio::main]
+    ///# async fn main() -> Result<(), Error> {
+    ///#
+    /// let conn = Connection::new("postgresql://localhost?user=tg").await?;
+    ///#
+    ///#
+    ///#
+    /// let product_list : Vec<Product> =
+    ///    conn.query_multiple("SELECT * FROM Products LIMIT 3", &[]).await?;
+    /// assert_eq!(product_list,
+    ///     vec!(
+    ///    Product {
+    ///	    prod_id : 1,
+    ///	    title : String::from("ACADEMY ACADEMY")
+    ///    },
+    ///	Product {
+    ///	   prod_id : 2,
+    ///	   title : String::from("ACADEMY ACE")
+    ///    },
+    ///	Product {
+    ///	    prod_id : 3,
+    ///	    title : String::from("ACADEMY ADAPTATION")
+    ///	}));
+    ///# Ok(())
+    ///# }
     /// ```
     pub async fn query_multiple<T>(
         &self,
@@ -118,22 +128,23 @@ impl Connection {
     /// Get a single row of a table.
     ///
     /// Example:
-    /// ```
-    /// use sprattus::Connection;
+    /// ```no_run
+    /// use sprattus::*;
     /// use tokio::prelude::*;
-    /// use sprattus::FromSql;
     ///
     /// #[derive(FromSql, Eq, PartialEq, Debug)]
     /// struct Product {
+    ///     #[sql(primary_key)]
     ///     prod_id: i32,
     ///     title: String
     /// }
     ///
     /// #[tokio::main]
-    /// async fn main() {
-    ///     let conn = Connection::new("postgresql://localhost/dellstore2?user=tg").await.unwrap();
-    ///     let product : Product = conn.query("SELECT prod_id, title FROM Products LIMIT 1", &[]).await.unwrap();
+    /// async fn main() -> Result<(), Error> {
+    ///     let conn = Connection::new("postgresql://localhost?user=tg").await?;
+    ///     let product : Product = conn.query("SELECT * FROM Products LIMIT 1", &[]).await?;
     ///     assert_eq!(product, Product{ prod_id: 1, title: String::from("ACADEMY ACADEMY")});
+    ///     Ok(())
     /// }
     /// ```
     pub async fn query<T>(&self, sql: &str, args: &[&(dyn ToSqlItem + Sync)]) -> Result<T, Error>
@@ -148,30 +159,31 @@ impl Connection {
     /// Update a single rust value in the database.
     ///
     /// Example:
-    /// ```
-    /// use sprattus::Connection;
+    /// ```no_run
+    /// use sprattus::*;
     /// use tokio::prelude::*;
-    /// use sprattus::FromSql;
     ///
     /// #[derive(FromSql, ToSql, Eq, PartialEq, Debug)]
     /// struct Product {
+    ///     #[sql(primary_key)]
     ///     prod_id: i32,
     ///     title: String
     /// }
     ///
     /// #[tokio::main]
-    /// async fn main() {
-    ///     let conn = Connection::new("postgresql://localhost/dellstore2?user=tg").await.unwrap();
+    /// async fn main() -> Result<(), Error> {
+    ///     let conn = Connection::new("postgresql://localhost?user=tg").await?;
     ///     // Change a existing record in the database.
-    ///     conn.update(Product { prod_id : 50, title: String::from("Rust ORM")}).await.expect("update failed");
+    ///     conn.update(&Product { prod_id : 50, title: String::from("Rust ORM")}).await?;
     ///
-    ///     let product : Product = conn.query("SELECT prod_id, title FROM Products where prod_id = 50", &[]).await.unwrap();
+    ///     let product : Product = conn.query("SELECT * FROM Products where prod_id = 50", &[]).await?;
     ///     assert_eq!(product, Product{ prod_id: 50, title: String::from("Rust ORM")});
     ///     // Change it back to it's original value.
-    ///     conn.update(Product { prod_id : 50, title: String::from("ACADEMY BAKED")}).await.expect("update failed");
+    ///     conn.update(&Product { prod_id : 50, title: String::from("ACADEMY BAKED")}).await?;
     ///
-    ///     let product : Product = conn.query("SELECT prod_id, title FROM Products where prod_id = 50", &[]).await.unwrap();
+    ///     let product : Product = conn.query("SELECT * FROM Products where prod_id = 50", &[]).await?;
     ///     assert_eq!(product, Product{ prod_id: 50, title: String::from("ACADEMY BAKED")});
+    ///     Ok(())
     /// }
     /// ```
     pub async fn update<T: traits::FromSql + traits::ToSql>(&self, item: &T) -> Result<T, Error>
@@ -205,41 +217,31 @@ impl Connection {
     /// Update multiple rust values in the database.
     ///
     /// Example:
-    /// ```
-    /// use sprattus::Connection;
+    /// ```no_run
+    /// use sprattus::*;
     /// use tokio::prelude::*;
-    /// use sprattus::FromSql;
     ///
     /// #[derive(FromSql, ToSql, Eq, PartialEq, Debug)]
     /// struct Product {
+    ///     #[sql(primary_key)]
     ///     prod_id: i32,
     ///     title: String
     /// }
     ///
     /// #[tokio::main]
-    /// async fn main() {
-    ///     let conn = Connection::new("postgresql://localhost/dellstore2?user=tg").await.unwrap();
+    /// async fn main() -> Result<(), Error> {
+    ///     let conn = Connection::new("postgresql://localhost?user=tg").await?;
     ///     let new_products = vec!(
     ///             Product{ prod_id: 60, title: String::from("Rust ACADEMY") },
     ///             Product{ prod_id: 61, title: String::from("SQL ACADEMY") },
     ///             Product{ prod_id: 62, title: String::from("Backend development training") },
     ///         );
     ///     // Change a existing record in the database.
-    ///     conn.update_multiple(new_products).await.expect("update failed");
-    ///
-    ///     let products : Vec<Product> = conn.query("SELECT prod_id, title FROM Products where prod_id in (60, 61, 62)", &[]).await.unwrap();
+    ///     conn.update_multiple(&new_products).await?;
+    ///     let sql = "SELECT * FROM Products where prod_id in (60, 61, 62)";
+    ///     let products: Vec<Product> = conn.query_multiple(sql, &[]).await?;
     ///     assert_eq!(products, new_products);
-    ///
-    ///     let old_products = vec!(
-    ///             Product{ prod_id: 50, title: String::from("ACADEMY BEAST") },
-    ///             Product{ prod_id: 50, title: String::from("ACADEMY BEAUTY") },
-    ///             Product{ prod_id: 50, title: String::from("ACADEMY BED") },
-    ///         );
-    ///     // Change it back to it's original value.
-    ///     conn.update_multiple(old_products).await.expect("update failed");
-    ///
-    ///     let product_list : Vec<Product> = conn.query("SELECT prod_id, title FROM Products where prod_id in (60, 61, 62)", &[]).await.unwrap();
-    ///     assert_eq!(product_list, old_products);
+    ///     Ok(())
     /// }
     /// ```
     pub async fn update_multiple<T>(&self, items: &[T]) -> Result<Vec<T>, Error>
@@ -287,27 +289,25 @@ impl Connection {
     /// Create a new row in the database.
     ///
     /// Example:
-    /// ```
-    /// use sprattus::Connection;
+    /// ```no_run
+    /// use sprattus::*;
     /// use tokio::prelude::*;
-    /// use sprattus::FromSql;
     ///
     /// #[derive(FromSql, ToSql, Eq, PartialEq, Debug)]
     /// struct Product {
-    ///     #[sprattus(primary_key)]
+    ///     #[sql(primary_key)]
     ///     prod_id: i32,
     ///     title: String
     /// }
     ///
     /// #[tokio::main]
-    /// async fn main() {
-    ///     let conn = Connection::new("postgresql://localhost/dellstore2?user=tg").await.unwrap();
+    /// async fn main() -> Result<(), Error> {
+    ///     let conn = Connection::new("postgresql://localhost?user=tg").await?;
     ///     let new_product = Product {prod_id: 0, title: String::from("Sql insert lesson")};
-    ///     let id = conn.create(new_product).await.unwrap().get_id();
-    ///     let product = conn.query("SELECT prod_id, title from Products where prod_id = $1", &[id]);
+    ///     let product = conn.create(&new_product).await?;
     ///
     ///     assert_eq!(new_product, product);
-    ///
+    ///     Ok(())
     /// }
     /// ```
     pub async fn create<T>(&self, item: &T) -> Result<T, Error>
@@ -333,30 +333,31 @@ impl Connection {
     /// Create new rows in the database.
     ///
     /// Example:
-    /// ```
-    /// use sprattus::Connection;
+    /// ```no_run
+    /// use sprattus::*;
     /// use tokio::prelude::*;
-    /// use sprattus::FromSql;
     ///
     /// #[derive(FromSql, ToSql, Eq, PartialEq, Debug)]
     /// struct Product {
+    ///     #[sql(primary_key)]
     ///     prod_id: i32,
     ///     title: String
     /// }
     ///
     /// #[tokio::main]
-    /// async fn main() {
-    ///     let conn = Connection::new("postgresql://localhost/dellstore2?user=tg").await.unwrap();
+    /// async fn main() -> Result<(), Error> {
+    ///     let conn = Connection::new("postgresql://localhost?user=tg").await?;
     ///     let new_products = vec!(
     ///         Product {prod_id: 0, title: String::from("Sql insert lesson")},
     ///         Product {prod_id: 0, title: String::from("Rust macro lesson")},
-    ///         Product {prod_id: 0, title: String::from("Postgres data types lesson")};
+    ///         Product {prod_id: 0, title: String::from("Postgres data types lesson")}
     ///     );
-    ///     let products = conn.create(new_product).await.unwrap();
+    ///     let products = conn.create_multiple(&new_products).await?;
     ///
-    ///     assert_eq!(new_products, products);
+    ///     assert_eq!(&new_products, &products);
     ///
-    ///     conn.delete(products).await.unwrap();
+    ///     conn.delete_multiple(&products).await?;
+    ///     Ok(())
     /// }
     /// ```
     pub async fn create_multiple<T>(&self, items: &[T]) -> Result<Vec<T>, Error>
@@ -387,27 +388,27 @@ impl Connection {
     /// Deletes a item.
     ///
     /// Example:
-    /// ```
-    /// use sprattus::Connection;
+    /// ```no_run
+    /// use sprattus::*;
     /// use tokio::prelude::*;
-    /// use sprattus::FromSql;
     ///
     /// #[derive(FromSql, ToSql, Eq, PartialEq, Debug)]
     /// struct Product {
+    ///     #[sql(primary_key)]
     ///     prod_id: i32,
     ///     title: String
     /// }
     ///
     /// #[tokio::main]
-    /// async fn main() {
-    ///     let conn = Connection::new("postgresql://localhost/dellstore2?user=tg").await.unwrap();
+    /// async fn main() -> Result<(), Error> {
+    ///     let conn = Connection::new("postgresql://localhost?user=tg").await?;
+    ///
     ///     let new_product = Product {prod_id: 0, title: String::from("Sql insert lesson")};
-    ///     let id = conn.create(new_product).await.unwrap().get_id();
-    ///     let product = conn.query("SELECT prod_id, title from Products where prod_id = $1", &[id]);
+    ///     let product = conn.create(&new_product).await?;
+    ///     let deleted_product = conn.delete(&product).await?;
     ///
-    ///     assert_eq!(new_product, product);
-    ///
-    ///     conn.delete(product).await.unwrap();
+    ///     assert_eq!(&product, &deleted_product);
+    ///     Ok(())
     /// }
     /// ```
     pub async fn delete<T: traits::FromSql + traits::ToSql>(&self, item: &T) -> Result<T, Error>
@@ -431,31 +432,30 @@ impl Connection {
     /// Deletes a list of items.
     ///
     /// Example:
-    /// ```
-    /// use sprattus::Connection;
+    /// ```no_run
+    /// use sprattus::*;
     /// use tokio::prelude::*;
-    /// use sprattus::FromSql;
     ///
     /// #[derive(FromSql, ToSql, Eq, PartialEq, Debug)]
     /// struct Product {
+    ///     #[sql(primary_key)]
     ///     prod_id: i32,
     ///     title: String
     /// }
     ///
     /// #[tokio::main]
-    /// async fn main() {
-    ///     let conn = Connection::new("postgresql://localhost/dellstore2?user=tg").await.unwrap();
+    /// async fn main() -> Result<(), Error> {
+    ///     let conn = Connection::new("postgresql://localhost?user=tg").await?;
     ///     let new_products = vec!(
     ///         Product {prod_id: 0, title: String::from("Sql insert lesson")},
     ///         Product {prod_id: 0, title: String::from("Rust macro lesson")},
-    ///         Product {prod_id: 0, title: String::from("Postgres data types lesson")};
+    ///         Product {prod_id: 0, title: String::from("Postgres data types lesson")}
     ///     );
-    ///     let id = conn.create(new_product).await.unwrap().get_id();
-    ///     let products = conn.query_multiple("SELECT prod_id, title from Products where prod_id = $1", &[id]);
+    ///     let created_products = conn.create_multiple(&new_products).await?;
     ///
-    ///     assert_eq!(new_products, products);
-    ///
-    ///     conn.delete(products).await.unwrap();
+    ///     let deleted_products = conn.delete_multiple(&created_products).await?;
+    ///     assert_eq!(&created_products, &deleted_products);
+    ///     Ok(())
     /// }
     /// ```
     pub async fn delete_multiple<P, T>(&self, items: &[T]) -> Result<Vec<T>, Error>
