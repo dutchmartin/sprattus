@@ -1,9 +1,10 @@
-# Sprattus, a async Rust ORM for Postgres
+Sprattus, a async Rust ORM for Postgres
+================
+[![Build Status](https://api.travis-ci.com/dutchmartin/sprattus.svg?branch=master)](https://travis-ci.com/dutchmartin/sprattus)
 
 Sprattus is a crate that let's you easily do async CRUD operations on your Postgres database with Rust structs.
 
-
-### Getting started
+## Getting started
 
 Add sprattus to your cargo.toml:  
 ```toml
@@ -52,8 +53,8 @@ struct Fruit {
 
 #[tokio::main]
 async fn main() -> Result<(), Error>{
-    let conn = PGConnection::new("postgresql://localhost/dellstore2?user=tg").await.unwrap();
-    let fruit = Fruit{
+    let conn = PGConnection::new("postgresql://localhost?user=postgres").await?;
+    let fruit = Fruit {
         id: 0,
         name: String::from("apple")
     };
@@ -63,4 +64,9 @@ async fn main() -> Result<(), Error>{
 }
 ```
 
-Please check out the [docs](https://docs.rs) for further reference.
+Please check out the [docs](https://docs.rs/sprattus) for further reference.
+
+## name
+The name sprattus is the genus of the fish named [sprat](https://en.wikipedia.org/wiki/Sprat). It is a fitting name because of the schooling behavour of the sprat: 
+> Sprats travel asynchronous from each other in large schools with other fish and swim continuously throughout the day
+
