@@ -1,0 +1,16 @@
+language: rust
+rust:
+  - beta
+env:
+  - DOCKER_COMPOSE_VERSION=1.4.2
+
+jobs:
+  fast_finish: true
+
+script:
+  - cargo build --verbose --all
+  - cargo test --verbose --all
+  - cd ./sprattus-test && cargo run
+
+services:
+  - postgresql
