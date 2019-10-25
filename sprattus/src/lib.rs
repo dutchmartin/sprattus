@@ -116,8 +116,8 @@
 //! ### Renaming fields
 //! In any case of having not the same name for a field in the database and in Rust, use the rename annotation.
 //! ```no_run
-//!# use sprattus::*;
-//!# #[derive(ToSql)]
+//! # use sprattus::*;
+//! # #[derive(ToSql)]
 //! struct Product {
 //!     #[sql(primary_key)]
 //!     id: i32,
@@ -131,8 +131,8 @@
 //! Every struct that wants to use the `ToSql` derive macro needs to have a primary key.
 //! Therefore there is a annotion available for that.
 //! ```no_run
-//!# use sprattus::*;
-//!# #[derive(ToSql)]
+//! # use sprattus::*;
+//! # #[derive(ToSql)]
 //! struct User {
 //!     // Annotates id as primary key of the table.
 //!     #[sql(primary_key)]
@@ -144,7 +144,7 @@
 //! In many cases, the name of your Rust struct will not correspond with the table in Postgres.
 //! To solve that problem, there is a attribute to select the table belonging to the created struct:
 //! ```no_run
-//!# use sprattus::*;
+//! # use sprattus::*;
 //! // This tells sprattus to use the 'houses' table in Postgres.
 //! #[derive(ToSql)]
 //! #[sql(table = "houses")]
