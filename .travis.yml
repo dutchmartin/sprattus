@@ -1,6 +1,6 @@
 language: rust
 rust:
-  - beta
+  - stable
 env:
   - DOCKER_COMPOSE_VERSION=1.4.2
 

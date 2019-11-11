@@ -22,7 +22,7 @@ struct Reorder {
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     println!(" Starting Tests...\n");
-    let conn = Connection::new("postgresql://localhost?user=tg")
+    let conn = Connection::new("postgresql://localhost?user=postgres")
         .await
         .unwrap();
 
