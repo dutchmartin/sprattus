@@ -1,7 +1,6 @@
 use crate::*;
 use futures_util::future::FutureExt;
 use futures_util::try_future::TryFutureExt;
-use parking_lot::*;
 use std::collections::HashMap;
 use std::sync::Arc;
 use strfmt::strfmt;
@@ -13,7 +12,7 @@ use tokio_postgres::*;
 ///
 #[derive(Clone)]
 pub struct Connection {
-    client: Arc<Mutex<Client>>,
+    client: Arc<Client>,
 }
 
 impl Connection {
@@ -38,7 +37,7 @@ impl Connection {
             .map(|conn| conn.unwrap());
         tokio::spawn(connection);
         Ok(Self {
-            client: Arc::new(Mutex::new(client)),
+            client: Arc::new(client),
         })
     }
     /// Executes a statement, returning the number of rows modified.
@@ -49,7 +48,7 @@ impl Connection {
     ///
     /// Panics if the number of parameters provided does not match the number expected.
     pub async fn execute(&self, sql: &str, args: &[&(dyn ToSqlItem + Sync)]) -> Result<u64, Error> {
-        let client = self.client.lock();
+        let client = &self.client;
         client.execute(sql, args).await
     }
 
@@ -64,7 +63,7 @@ impl Connection {
     /// functionality to safely embed that data in the request. Do not form statements via string concatenation and pass
     /// them to this method!
     pub async fn batch_execute(&self, sql: &str) -> Result<(), Error> {
-        let client = self.client.lock();
+        let client = &self.client;
         let result = { client.batch_execute(&sql) };
         result.await
     }
@@ -118,7 +117,7 @@ impl Connection {
         T: FromSql,
     {
         self.client
-            .lock()
+            
             .query(sql, args)
             .map(|rows| rows?.iter().map(|row| T::from_row(row)).collect())
             .await
@@ -151,7 +150,7 @@ impl Connection {
     where
         T: FromSql,
     {
-        let client = self.client.lock();
+        let client = &self.client;
         T::from_row(&client.query_one(sql, args).await?)
     }
 
@@ -204,7 +203,7 @@ impl Connection {
             generate_single_prepared_arguments_list(2, T::get_argument_count() + 1);
         sql_vars.insert(String::from("prepared_values"), prepared_values.as_ref());
         let sql = strfmt(sql_template, &sql_vars).unwrap();
-        let client = self.client.lock();
+        let client = &self.client;
 
         T::from_row(
             &client
@@ -278,7 +277,7 @@ impl Connection {
             .map(|item| item.get_values_of_all_fields())
             .flatten()
             .collect();
-        let client = self.client.lock();
+        let client = &self.client;
         client
             .query(sql.as_str(), params.as_slice())
             .map(|rows| rows?.iter().map(|row| T::from_row(row)).collect())
@@ -320,7 +319,7 @@ impl Connection {
             fields = T::get_fields(),
             prepared_values = T::get_prepared_arguments_list(),
         );
-        let client = self.client.lock();
+        let client = &self.client;
 
         T::from_row(
             &client
@@ -377,7 +376,7 @@ impl Connection {
             .map(|item| item.get_query_params())
             .flatten()
             .collect();
-        let client = self.client.lock();
+        let client = &self.client;
         client
             .query(sql.as_str(), params.as_slice())
             .map(|rows| rows?.iter().map(|row| T::from_row(row)).collect())
@@ -420,7 +419,7 @@ impl Connection {
             table_name = T::get_table_name(),
             primary_key = T::get_primary_key()
         );
-        let client = self.client.lock();
+        let client = &self.client;
         T::from_row(
             &client
                 .query_one(sql.as_str(), &[&item.get_primary_key_value()])
@@ -478,7 +477,7 @@ impl Connection {
             .iter()
             .map(|i| i as &(dyn tokio_postgres::types::ToSql + Sync))
             .collect::<Vec<_>>();
-        let client = self.client.lock();
+        let client = &self.client;
         client
             .query(sql.as_str(), p.as_slice())
             .map(|rows| rows?.iter().map(|row| T::from_row(row)).collect())
