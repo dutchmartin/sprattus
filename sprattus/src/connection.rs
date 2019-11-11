@@ -117,7 +117,6 @@ impl Connection {
         T: FromSql,
     {
         self.client
-            
             .query(sql, args)
             .map(|rows| rows?.iter().map(|row| T::from_row(row)).collect())
             .await
