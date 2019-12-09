@@ -1,6 +1,7 @@
 Sprattus, a async Rust ORM for Postgres
 ================
 [![Build Status](https://api.travis-ci.com/dutchmartin/sprattus.svg?branch=master)](https://travis-ci.com/dutchmartin/sprattus)
+[![Documentation](https://docs.rs/sprattus/badge.svg)](https://docs.rs/sprattus/)]
 
 Sprattus is a crate that let's you easily do async CRUD operations on your Postgres database with Rust structs.
 
