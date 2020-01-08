@@ -1,6 +1,6 @@
 use crate::*;
 use futures_util::future::FutureExt;
-use futures_util::try_future::TryFutureExt;
+use futures_util::future::TryFutureExt;
 use std::collections::HashMap;
 use std::sync::Arc;
 use strfmt::strfmt;

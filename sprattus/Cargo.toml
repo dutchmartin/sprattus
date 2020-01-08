@@ -11,11 +11,11 @@ categories = ["database", "asynchronous", "postgres"]
 
 
 [dependencies]
-tokio-postgres = { version="^0.5.0-alpha.1" , features = ["default"]}
-futures-util-preview = { version = "^0.3.0-alpha.19" }
+tokio-postgres = { version="=0.5.1" , features = ["default"]}
+futures-util = "0.3.1"
 strfmt = "0.1.6"
 sprattus-derive = "0.0.1"
-tokio = "^0.2.0-alpha.6"
+tokio = "0.2"
 
 
 [features]
@@ -24,4 +24,4 @@ tokio = "^0.2.0-alpha.6"
 "with-eui48-0_4" = ["tokio-postgres/with-eui48-0_4"]
 "with-geo-types-0_4" = ["tokio-postgres/with-geo-types-0_4"]
 "with-serde_json-1" = ["tokio-postgres/with-serde_json-1"]
-"with-uuid-0_7" = ["tokio-postgres/with-uuid-0_7"]
+"with-uuid-0_8" = ["tokio-postgres/with-uuid-0_8"]
