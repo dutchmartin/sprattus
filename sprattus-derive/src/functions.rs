@@ -26,25 +26,25 @@ pub(crate) fn get_table_name_from_attributes(attributes: Vec<Attribute>) -> Opti
             }
             None => continue,
         }
-        'table_name_search: for item in attribute.tokens {
+        for item in attribute.tokens {
             match item {
                 Group(group) => {
                     for token in group.stream() {
                         match token {
                             Ident2(ident) => {
                                 if !ident.to_string().eq("table") {
-                                    break 'table_name_search;
+                                    break;
                                 }
                             }
                             Punct(punct) => {
                                 if punct.as_char() != '=' {
-                                    break 'table_name_search;
+                                    break;
                                 }
                             }
                             TokenTree::Literal(literal) => {
                                 return Some(literal.to_string().replace("\"", ""));
                             }
-                            _ => break 'table_name_search,
+                            _ => break,
                         }
                     }
                 }
@@ -144,7 +144,7 @@ pub(crate) fn generate_argument_list_with_types(fields: &[StructFieldData]) -> S
 }
 
 pub(crate) fn find_field_table_name(field: &Field) -> Option<Literal> {
-    'attribute_loop: for attribute in field.attrs.clone() {
+    for attribute in field.attrs.clone() {
         if !is_sprattus_attribute(&attribute) {
             continue;
         }
@@ -156,10 +156,10 @@ pub(crate) fn find_field_table_name(field: &Field) -> Option<Literal> {
                             return Some(name);
                         }
                     }
-                    _ => continue 'attribute_loop,
+                    _ => break,
                 },
                 _ => {
-                    continue 'attribute_loop;
+                    break;
                 }
             }
         }
@@ -168,7 +168,7 @@ pub(crate) fn find_field_table_name(field: &Field) -> Option<Literal> {
 }
 
 pub(crate) fn find_key_type(field: &Field) -> KeyType {
-    'attribute_loop: for attribute in field.attrs.clone() {
+    for attribute in field.attrs.clone() {
         if !is_sprattus_attribute(&attribute) {
             continue;
         }
@@ -187,7 +187,7 @@ pub(crate) fn find_key_type(field: &Field) -> KeyType {
                     }
                 },
                 _ => {
-                    continue 'attribute_loop;
+                    break;
                 }
             }
         }
