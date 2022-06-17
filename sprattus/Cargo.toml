@@ -12,7 +12,7 @@ categories = ["database", "asynchronous", "postgres"]
 
 [dependencies]
 tokio-postgres = { version="=0.5.1" , features = ["default"]}
-futures-util = "0.3.1"
+futures-util = "0.3.11"
 strfmt = "0.1.6"
 sprattus-derive = "0.0.1"
 tokio = "0.2"
