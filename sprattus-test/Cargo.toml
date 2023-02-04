@@ -8,5 +8,5 @@ edition = "2018"
 
 [dependencies]
 sprattus = { path = "../sprattus", features = ["with-chrono-0_4"] }
-tokio = { version = "0.2", features = ["macros"] }
+tokio = { version = "1.18", features = ["macros"] }
 chrono = "^0.4.0"
